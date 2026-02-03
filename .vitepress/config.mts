@@ -127,7 +127,7 @@ export default defineConfig({
     ],
     
     footer: {
-      message: 'LayangKit — Cepat deploy ke edge, aman dengan auth built-in ⚡',
+      message: 'Dari zero ke production dalam 5 menit — 100% gratis 🚀',
       copyright: 'Copyright © 2026'
     },
     

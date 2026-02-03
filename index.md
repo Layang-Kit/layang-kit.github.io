@@ -286,6 +286,6 @@ Pilih salah satu untuk memulai:
 
 ---
 
-**Tepi Kilat — Cepat deploy ke edge, aman dengan auth built-in** ⚡
+**Dari zero ke production dalam 5 menit — 100% gratis, 300+ edge locations** 🚀
 
 [Mulai Sekarang →](./guide/getting-started)
