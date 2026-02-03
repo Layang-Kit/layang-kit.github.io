@@ -24,21 +24,27 @@ npm --version   # Harus v8.0.0 atau lebih tinggi
 
 ## 📋 Step-by-Step Setup
 
-### Step 1: Clone & Install (2 menit)
+### Step 1: Create Project (1 menit)
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/sveltekit-cf-d1-boilerplate.git
+# Create project dengan npm create layang (paling mudah!)
+npm create layang@latest my-app
 
 # Masuk ke folder project
-cd sveltekit-cf-d1-boilerplate
-
-# Install dependencies (~1 menit)
-npm install
+cd my-app
 ```
+
+> 💡 **Baru!** `npm create layang` akan otomatis setup project lengkap dengan dependencies.
+>
+> Alternatif dengan git clone:
+> ```bash
+> git clone https://github.com/maulanashalihin/svelte-kit-cloudflare-starter.git my-app
+> cd my-app && npm install
+> ```
 
 **Output yang diharapkan:**
 ```
+✨ Project created successfully!
 added XXX packages in XXs
 ```
 

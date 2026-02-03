@@ -22,16 +22,21 @@ Setup project LayangKit dari nol sampai bisa coding. 🪁
 
 ## 📋 Step-by-Step
 
-### Step 1: Clone & Install (1 menit)
+### Step 1: Create Project (1 menit)
 
 ```bash
-# Clone repository
-git clone https://github.com/maulanashalihin/svelte-kit-cloudflare-starter.git my-app
+# Create project dengan npm create (paling mudah!)
+npm create layang@latest my-app
 cd my-app
-
-# Install dependencies
-npm install
 ```
+
+> 💡 **Tip:** `npm create layang` akan otomatis clone dan install dependencies. Lebih cepat dari git clone manual!
+> 
+> Alternatif manual jika perlu:
+> ```bash
+> git clone https://github.com/maulanashalihin/svelte-kit-cloudflare-starter.git my-app
+> cd my-app && npm install
+> ```
 
 ---
 

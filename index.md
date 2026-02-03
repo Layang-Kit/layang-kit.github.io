@@ -172,9 +172,9 @@ Semua layanan punya free tier yang sangat besar:
 ## 🚀 Quick Start (Benar-benar 5 Menit)
 
 ```bash
-# 1. Clone template
-git clone https://github.com/maulanashalihin/svelte-kit-cloudflare-starter.git my-app
-cd my-app && npm install
+# 1. Create project dengan npm (lebih cepat!)
+npm create layang@latest my-app
+cd my-app
 
 # 2. Buat database (satu command)
 npx wrangler d1 create my-app-db
@@ -184,6 +184,8 @@ npx wrangler d1 create my-app-db
 npm run db:migrate:local
 npm run dev
 ```
+
+> 💡 **Baru!** Sekarang install lebih mudah dengan `npm create layang`. Tidak perlu git clone manual!
 
 🎉 **Buka http://localhost:5173** — Auth, database, semua berfungsi.
 
