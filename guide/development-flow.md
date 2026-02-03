@@ -54,6 +54,115 @@ src/routes/
 
 ---
 
+## 🛤️ Dynamic Routes
+
+Untuk URL dinamis seperti `/posts/first-post`, gunakan bracket `[slug]` di nama folder.
+
+### Struktur Folder
+
+```
+src/routes/
+├── posts/
+│   ├── +page.svelte              # /posts (list)
+│   └── [slug]/                   # /posts/:slug
+│       ├── +page.svelte          # UI detail post
+│       └── +page.server.ts       # Load data post
+```
+
+### Contoh Lengkap: Blog Post
+
+#### 1. Schema Database
+
+```typescript
+// src/lib/db/schema.ts
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+
+export const posts = sqliteTable("posts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  slug: text("slug").notNull().unique(),  // URL-friendly
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  published: integer("published", { mode: "boolean" }).default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+```
+
+#### 2. Server Load
+
+```typescript
+// routes/posts/[slug]/+page.server.ts
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { eq } from 'drizzle-orm';
+import * as schema from '$lib/db/schema';
+
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const { slug } = params;  // "first-post"
+  
+  const post = await locals.db.query.posts.findFirst({
+    where: eq(schema.posts.slug, slug),
+  });
+  
+  if (!post) {
+    throw error(404, 'Post not found');
+  }
+  
+  return { post };
+};
+```
+
+#### 3. Page Component
+
+```svelte
+<!-- routes/posts/[slug]/+page.svelte -->
+<script>
+  let { data } = $props();
+</script>
+
+<svelte:head>
+  <title>{data.post.title}</title>
+</svelte:head>
+
+<article class="max-w-2xl mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-4">{data.post.title}</h1>
+  <time class="text-sm text-neutral-500">
+    {new Date(data.post.createdAt).toLocaleDateString('id-ID')}
+  </time>
+  <div class="prose mt-6">
+    {data.post.content}
+  </div>
+</article>
+```
+
+### Generate Slug (Saat Create Post)
+
+```typescript
+// utils/slug.ts
+export function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')   // Ganti non-alphanumeric dengan -
+    .replace(/(^-|-$)/g, '');       // Hapus - di awal/akhir
+}
+
+// Penggunaan
+generateSlug("Hello World!");        // "hello-world"
+generateSlug("Cara Deploy SvelteKit"); // "cara-deploy-sveltekit"
+```
+
+### Pattern URL Lainnya
+
+| Pattern | Contoh URL | Params | Keterangan |
+|---------|------------|--------|------------|
+| `[slug]` | `/posts/hello-world` | `{ slug: 'hello-world' }` | Parameter wajib |
+| `[[lang]]` | `/en/posts` atau `/posts` | `{ lang: 'en' }` atau `{}` | Parameter opsional |
+| `[...path]` | `/docs/a/b/c` | `{ path: 'a/b/c' }` | Catch-all (sisa path) |
+| `[id=int]` | `/products/123` | `{ id: 123 }` | Auto-convert ke number |
+
+> 💡 **Tips SEO**: Gunakan slug deskriptif (`cara-deploy-sveltekit`) bukan ID (`post-123`). Pastikan slug `unique` di database!
+
+---
+
 ## 🔄 Data Flow Patterns
 
 ### Pattern 1: Server Load (Paling Umum)
