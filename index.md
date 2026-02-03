@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: "🪁 LayangKit"
-  text: "Edge-First Full-Stack Starter"
+  text: "Edge-First Starter"
   tagline: SvelteKit + Cloudflare D1 + Drizzle ORM. Auth, email, upload siap pakai. Deploy ke 300+ edge locations.
   image:
     src: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/cloudflare-color.png
