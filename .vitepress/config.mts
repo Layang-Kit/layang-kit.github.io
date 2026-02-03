@@ -2,8 +2,8 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "SvelteKit CF Starter",
-  description: "Starter Kit SvelteKit + Cloudflare. Build Fast, Deploy Everywhere.",
+  title: "LayangKit",
+  description: "Edge-first full-stack starter template — SvelteKit + Cloudflare D1 + Drizzle ORM. Cepat deploy ke edge, aman dengan auth built-in.",
   lang: 'id-ID',
   lastUpdated: true,
   
@@ -127,7 +127,7 @@ export default defineConfig({
     ],
     
     footer: {
-      message: 'SvelteKit Cloudflare Starter - Build Fast, Deploy Everywhere 🚀',
+      message: 'LayangKit — Cepat deploy ke edge, aman dengan auth built-in ⚡',
       copyright: 'Copyright © 2026'
     },
     
@@ -140,7 +140,7 @@ export default defineConfig({
     },
     
     editLink: {
-      pattern: 'https://github.com/yourusername/sveltekit-cf-starter/edit/main/docs/:path'
+      pattern: 'https://github.com/maulanashalihin/svelte-kit-cloudflare-starter/edit/main/docs/:path'
     }
   }
 })

@@ -1,12 +1,12 @@
 # 🎨 Features Guide
 
-Panduan menggunakan fitur built-in SvelteKit CF Starter.
+Panduan menggunakan fitur built-in LayangKit. 🪁
 
 ---
 
 ## 🔐 Authentication
 
-Starter kit sudah include authentication lengkap dengan Lucia Auth.
+LayangKit sudah include authentication lengkap dengan Lucia Auth.
 
 ### Fitur Auth yang Tersedia
 
@@ -352,7 +352,7 @@ export const actions = {
 
 ## 🎨 UI Components
 
-Starter kit menggunakan **Tailwind CSS 4** dengan tema dark default.
+LayangKit menggunakan **Tailwind CSS 4** dengan tema "Dark Elegance" default.
 
 > 🆕 **Tailwind 4**: Konfigurasi sekarang di `src/app.css` menggunakan `@theme`, bukan `tailwind.config.js`.
 
@@ -426,7 +426,7 @@ Konfigurasi ada di `src/app.css`:
 />
 ```
 
-> 💡 **Tips**: Starter kit sudah menyediakan class utility di `app.css`: `.card`, `.btn-primary`, `.btn-secondary`, `.input`
+> 💡 **Tips**: LayangKit sudah menyediakan class utility di `app.css`: `.card`, `.btn-primary`, `.btn-secondary`, `.input`
 
 ---
 

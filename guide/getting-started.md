@@ -1,10 +1,16 @@
 # 🚀 Getting Started - 5 Menit Setup
 
-Setup project SvelteKit Cloudflare dari nol sampai bisa coding.
+Setup project LayangKit dari nol sampai bisa coding. 🪁
 
 ---
 
 ## ✅ Prerequisites
+
+> 💡 **LayangKit** menggunakan stack modern yang 100% gratis untuk project kecil-menengah:
+> - Cloudflare Pages (unlimited requests)
+> - Cloudflare D1 (500k queries/hari, 5GB storage)
+> - Cloudflare R2 (10GB storage, 1 juta ops/bulan)
+> - Resend (100 email/hari)
 
 | Requirement | Cara Cek | Install |
 |-------------|----------|---------|

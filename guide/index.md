@@ -1,6 +1,8 @@
-# 📚 Dokumentasi SvelteKit Cloudflare Starter
+# 📚 Dokumentasi LayangKit
 
-Selamat datang! Dokumentasi ini dirancang untuk membuat development menjadi lebih mudah dan nyaman, baik untuk pemula maupun developer berpengalaman.
+Selamat datang di dokumentasi LayangKit! 🪁 Dokumentasi ini dirancang untuk membuat development menjadi lebih mudah dan nyaman, baik untuk pemula maupun developer berpengalaman.
+
+> 💰 **100% GRATIS untuk project kecil hingga menengah!** Semua layanan yang digunakan punya free tier yang sangat besar — bisa jalan bertahun-tahun tanpa keluar biaya sepeser pun.
 
 ---
 

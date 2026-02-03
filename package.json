@@ -1,8 +1,8 @@
 {
-  "name": "svelte-kit-cloudflare-docs",
+  "name": "layangkit-docs",
   "version": "1.0.0",
-  "description": "Documentation for SvelteKit Cloudflare Starter",
-  "private": true,
+  "description": "Documentation for LayangKit — Edge-first full-stack starter template",
+  "private": false,
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev",

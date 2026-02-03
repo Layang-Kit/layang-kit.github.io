@@ -1,6 +1,6 @@
 # 🚀 Quick Start - 5 Menit Setup
 
-Panduan setup project SvelteKit Cloudflare D1 dari nol sampai bisa diakses di browser.
+Panduan setup project LayangKit (SvelteKit + Cloudflare D1) dari nol sampai bisa diakses di browser. 🪁
 
 ---
 

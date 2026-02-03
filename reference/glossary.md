@@ -1,6 +1,23 @@
 # Glossary - Istilah & Konsep
 
-Daftar istilah teknis yang digunakan dalam project ini, dijelaskan dengan sederhana untuk pemula.
+Daftar istilah teknis yang digunakan dalam LayangKit, dijelaskan dengan sederhana untuk pemula.
+
+---
+
+## 🪁 LayangKit
+
+**LayangKit** adalah edge-first full-stack starter template yang dibangun dengan SvelteKit + Cloudflare D1 + Drizzle ORM.
+
+**Mengapa "LayangKit"?**
+- 🪁 **Layang** = Terbang tinggi, ringan, dan cepat
+- ⚡ **Kit** = Starter kit yang siap pakai
+- 🌐 **Tepi Kilat** = Cepat deploy ke edge network
+
+**Filosofi:**
+- 💰 **100% Gratis** — Free tier yang sangat besar untuk project kecil-menengah
+- 🚀 **Edge-First** — Deploy ke 300+ lokasi Cloudflare edge
+- 🔐 **Auth Built-in** — Authentication siap pakai dengan Lucia Auth
+- 🤖 **AI-Native** — Optimized untuk AI Agent workflow
 
 ---
 

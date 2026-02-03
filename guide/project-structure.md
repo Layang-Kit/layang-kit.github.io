@@ -1,11 +1,11 @@
 # Project Structure
 
-Struktur folder dan file di project SvelteKit Cloudflare Starter.
+Struktur folder dan file di project LayangKit. 🪁
 
 ## 🗂️ Struktur Direktori
 
 ```
-sveltekit-cf-starter/
+layangkit/
 │
 ├── 📁 .svelte-kit/           # Generated files (auto-generated)
 ├── 📁 .wrangler/             # Local D1 database (SQLite)

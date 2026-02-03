@@ -1,6 +1,6 @@
 # 🤖 AI Agent Workflow Guide
 
-Panduan menggunakan **3 AI Agent** untuk mengembangkan aplikasi dengan SvelteKit CF Starter.
+Panduan menggunakan **3 AI Agent** untuk mengembangkan aplikasi dengan LayangKit. 🪁
 
 ---
 
