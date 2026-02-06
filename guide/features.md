@@ -242,9 +242,11 @@ Update action di `+page.server.ts`:
 const twitter = form.get('twitter');
 // ... validation
 
-await locals.db.update(schema.users)
-  .set({ twitter, updatedAt: Date.now() })
-  .where(eq(schema.users.id, locals.user.id));
+await locals.db
+  .updateTable('users')
+  .set({ twitter, updated_at: Date.now() })
+  .where('id', '=', locals.user.id)
+  .execute();
 ```
 
 ---

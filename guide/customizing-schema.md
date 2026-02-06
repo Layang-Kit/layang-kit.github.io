@@ -364,19 +364,19 @@ npm run db:migrate:local
 ```typescript
 // src/routes/api/todos/+server.ts
 import { json, error } from '@sveltejs/kit';
-import { todos } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { generateId } from '$lib/auth/lucia';
+import { generateId } from '$lib/auth/session';
 
 export const GET = async ({ locals }) => {
   if (!locals.user) {
     throw error(401, 'Unauthorized');
   }
   
-  const userTodos = await locals.db.query.todos.findMany({
-    where: eq(todos.userId, locals.user.id),
-    orderBy: (todos, { desc }) => [desc(todos.createdAt)]
-  });
+  const userTodos = await locals.db
+    .selectFrom('todos')
+    .where('user_id', '=', locals.user.id)
+    .orderBy('created_at', 'desc')
+    .selectAll()
+    .execute();
   
   return json({ data: userTodos });
 };
@@ -388,26 +388,42 @@ export const POST = async ({ request, locals }) => {
   
   const body = await request.json();
   
-  const newTodo = await locals.db.insert(todos).values({
-    id: generateId(),
-    title: body.title,
-    description: body.description,
-    dueDate: body.dueDate ? new Date(body.dueDate) : null,
-    userId: locals.user.id
-  }).returning();
+  const newTodo = await locals.db
+    .insertInto('todos')
+    .values({
+      id: generateId(),
+      title: body.title,
+      description: body.description,
+      due_date: body.dueDate ? new Date(body.dueDate).getTime() : null,
+      user_id: locals.user.id,
+      created_at: Date.now(),
+      updated_at: Date.now()
+    })
+    .returningAll()
+    .executeTakeFirst();
   
-  return json({ data: newTodo[0] }, { status: 201 });
+  return json({ data: newTodo }, { status: 201 });
 };
 ```
 
 **Step 6: Update Types (opsional)**
 
 ```typescript
-// src/lib/db/types.ts
-import type { todos } from './schema';
-
-export type Todo = typeof todos.$inferSelect;
-export type NewTodo = typeof todos.$inferInsert;
+// src/lib/db/kysely-types.ts
+export interface Database {
+  todos: {
+    id: string;
+    title: string;
+    description: string | null;
+    status: 'pending' | 'in_progress' | 'completed';
+    priority: number;
+    due_date: number | null;
+    user_id: string;
+    created_at: number;
+    updated_at: number;
+  };
+  // ... tables lainnya
+}
 ```
 
 ---
@@ -444,14 +460,10 @@ npm run db:migrate:local
 
 ```typescript
 // scripts/seed-todos.ts
-import { drizzle } from 'drizzle-orm/d1';
-import { todos } from '../src/lib/db/schema';
-import { generateId } from '../src/lib/auth/lucia';
+import { generateId } from '../src/lib/auth/session';
 
-export async function seedTodos(db: D1Database) {
-  const d = drizzle(db);
-  
-  await d.insert(todos).values([
+export async function seedTodos(db: any) {
+  await db.insertInto('todos').values([
     {
       id: generateId(),
       title: 'Learn SvelteKit',

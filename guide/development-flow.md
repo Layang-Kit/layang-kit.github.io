@@ -93,15 +93,15 @@ export const posts = sqliteTable("posts", {
 // routes/posts/[slug]/+page.server.ts
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { eq } from 'drizzle-orm';
-import * as schema from '$lib/db/schema';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const { slug } = params;  // "first-post"
   
-  const post = await locals.db.query.posts.findFirst({
-    where: eq(schema.posts.slug, slug),
-  });
+  const post = await locals.db
+    .selectFrom('posts')
+    .where('slug', '=', slug)
+    .selectAll()
+    .executeTakeFirst();
   
   if (!post) {
     throw error(404, 'Post not found');
@@ -174,14 +174,18 @@ Gunakan untuk: Menampilkan data dari database
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-  // Query database langsung di server
-  const user = await locals.db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.id, locals.user.id)
-  });
+  // Query database langsung di server dengan Kysely
+  const user = await locals.db
+    .selectFrom('users')
+    .where('id', '=', locals.user.id)
+    .selectAll()
+    .executeTakeFirst();
   
-  const posts = await locals.db.query.posts.findMany({
-    where: (posts, { eq }) => eq(posts.authorId, locals.user.id)
-  });
+  const posts = await locals.db
+    .selectFrom('posts')
+    .where('author_id', '=', locals.user.id)
+    .selectAll()
+    .execute();
   
   // Return data - otomatis tersedia di page
   return { user, posts };
@@ -247,15 +251,18 @@ export const actions: Actions = {
       });
     }
     
-    // 3. Insert to database
+    // 3. Insert to database dengan Kysely
     const id = crypto.randomUUID();
-    await locals.db.insert(schema.posts).values({
-      id,
-      title,
-      content,
-      authorId: locals.user.id,
-      createdAt: Date.now()
-    });
+    await locals.db
+      .insertInto('posts')
+      .values({
+        id,
+        title: title as string,
+        content: content as string,
+        author_id: locals.user.id,
+        created_at: Date.now()
+      })
+      .execute();
     
     // 4. Redirect
     throw redirect(303, `/posts/${id}`);
@@ -323,10 +330,12 @@ import { json, error } from '@sveltejs/kit';
 export const GET: RequestHandler = async ({ locals, url }) => {
   const limit = parseInt(url.searchParams.get('limit') ?? '10');
   
-  const posts = await locals.db.query.posts.findMany({
-    limit,
-    orderBy: (posts, { desc }) => desc(posts.createdAt)
-  });
+  const posts = await locals.db
+    .selectFrom('posts')
+    .orderBy('created_at', 'desc')
+    .limit(limit)
+    .selectAll()
+    .execute();
   
   return json({ posts });
 };
@@ -377,13 +386,18 @@ Database di-inject ke `locals` via hooks:
 
 ```typescript
 // src/hooks.server.ts
-import { drizzle } from 'drizzle-orm/d1';
-import * as schema from '$lib/db/schema';
+import { Kysely } from 'kysely';
+import { D1Dialect } from 'kysely-d1';
+import type { Database } from '$lib/db/kysely-types';
 
 export const handle = async ({ event, resolve }) => {
-  // Inject DB ke locals
+  // Inject Kysely DB ke locals
   if (event.platform?.env?.DB) {
-    event.locals.db = drizzle(event.platform.env.DB, { schema });
+    event.locals.db = new Kysely<Database>({
+      dialect: new D1Dialect({
+        database: event.platform.env.DB,
+      }),
+    });
   }
   
   // ... auth handling
@@ -392,40 +406,52 @@ export const handle = async ({ event, resolve }) => {
 };
 ```
 
-### Query Patterns
+### Query Patterns (Kysely)
 
 ```typescript
 // SELECT all
-const users = await locals.db.query.users.findMany();
+const users = await locals.db
+  .selectFrom('users')
+  .selectAll()
+  .execute();
 
 // SELECT with WHERE
-const user = await locals.db.query.users.findFirst({
-  where: (users, { eq }) => eq(users.id, userId)
-});
+const user = await locals.db
+  .selectFrom('users')
+  .where('id', '=', userId)
+  .selectAll()
+  .executeTakeFirst();
 
-// SELECT with relations
-const postsWithAuthor = await locals.db.query.posts.findMany({
-  with: {
-    author: true  // Auto-join dengan users
-  }
-});
+// SELECT with JOIN
+const postsWithAuthor = await locals.db
+  .selectFrom('posts')
+  .innerJoin('users', 'posts.author_id', 'users.id')
+  .select(['posts.title', 'users.name as author_name'])
+  .execute();
 
 // INSERT
-await locals.db.insert(schema.posts).values({
-  id: crypto.randomUUID(),
-  title: 'Hello',
-  content: 'World',
-  createdAt: Date.now()
-});
+await locals.db
+  .insertInto('posts')
+  .values({
+    id: crypto.randomUUID(),
+    title: 'Hello',
+    content: 'World',
+    created_at: Date.now()
+  })
+  .execute();
 
 // UPDATE
-await locals.db.update(schema.posts)
-  .set({ title: 'Updated', updatedAt: Date.now() })
-  .where(eq(schema.posts.id, postId));
+await locals.db
+  .updateTable('posts')
+  .set({ title: 'Updated', updated_at: Date.now() })
+  .where('id', '=', postId)
+  .execute();
 
 // DELETE
-await locals.db.delete(schema.posts)
-  .where(eq(schema.posts.id, postId));
+await locals.db
+  .deleteFrom('posts')
+  .where('id', '=', postId)
+  .execute();
 ```
 
 ---

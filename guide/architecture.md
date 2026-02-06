@@ -229,14 +229,17 @@ User                    Frontend                  Backend                    Goo
 ```typescript
 // +page.server.ts
 export const load = async ({ locals }) => {
-  // ✅ Query di server, data di-embed di HTML
-  const users = await locals.db.query.users.findMany();
+  // ✅ Query di server dengan Kysely, data di-embed di HTML
+  const users = await locals.db
+    .selectFrom('users')
+    .selectAll()
+    .execute();
   return { users };
 };
 
 // +page.svelte
 <script>
-  export let data; // Data sudah ada, no loading state!
+  let { data } = $props(); // Data sudah ada, no loading state!
 </script>
 
 {#each data.users as user}
@@ -257,7 +260,10 @@ export const actions = {
   createPost: async ({ request, locals }) => {
     const form = await request.formData();
     // ✅ Works tanpa JavaScript!
-    await locals.db.insert(posts).values({ ... });
+    await locals.db
+      .insertInto('posts')
+      .values({ title, content, created_at: Date.now() })
+      .execute();
     return { success: true };
   }
 };
