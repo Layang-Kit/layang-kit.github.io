@@ -6,20 +6,23 @@ Panduan menggunakan **3 AI Agent** untuk mengembangkan aplikasi dengan LayangKit
 
 ## 🎯 Overview {#overview}
 
-Project ini menggunakan **3 AI Agent** yang bekerja sama:
+Project ini menggunakan **4 AI Agent** yang bekerja sama:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     AI AGENT WORKFLOW                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  INIT_AGENT → TASK_AGENT → MANAGER_AGENT                        │
+│  INIT_AGENT → TASK_AGENT / BATCH_TASK_AGENT → MANAGER_AGENT     │
 │                                                                 │
 │  1. INIT_AGENT: Setup project & dokumentasi                     │
 │     └── Buat PRD.md, TDD.md, ui-kit.html, PROGRESS.md           │
 │                                                                 │
-│  2. TASK_AGENT: Implementasi fitur                              │
-│     └── Baca PROGRESS.md → Implement → Test → Commit            │
+│  2a. TASK_AGENT: Implementasi fitur (per task)                  │
+│      └── Baca PROGRESS.md → Pilih 1 task → Implement → Commit   │
+│                                                                 │
+│  2b. BATCH_TASK_AGENT: Implementasi semua task sekaligus        │
+│      └── Execute ALL pending tasks → Commit(s) → Done           │
 │                                                                 │
 │  3. MANAGER_AGENT: Change management                            │
 │     └── Update docs → Approve → Release notes                   │
@@ -31,14 +34,17 @@ Project ini menggunakan **3 AI Agent** yang bekerja sama:
 
 ## 🚀 Quick Start {#quick-start}
 
-Gunakan 3 command ini untuk memulai:
+Gunakan command ini untuk memulai:
 
 ```bash
 # 1. Mulai project baru
 "@workflow/INIT_AGENT.md — start my project"
 
-# 2. Implementasi fitur  
+# 2a. Implementasi fitur (per task, dengan konfirmasi)
 "@workflow/TASK_AGENT.md — build next feature"
+
+# 2b. Implementasi SEMUA fitur sekaligus (MVP mode)
+"@workflow/BATCH_TASK_AGENT.md — execute all pending tasks"
 
 # 3. Manage changes
 "@workflow/MANAGER_AGENT.md — handle this change"
@@ -155,6 +161,114 @@ TASK_AGENT:
 
 ---
 
+## ⚡ BATCH_TASK_AGENT — Execute All Tasks {#batch-task-agent}
+
+**Gunakan saat:** MVP development, Bootstrap banyak fitur, Deadline ketat
+
+### Perbedaan dengan TASK_AGENT
+
+| Aspek | TASK_AGENT | BATCH_TASK_AGENT |
+|-------|------------|------------------|
+| **Execution** | 1 task per run | **Semua task sekaligus** |
+| **Konfirmasi** | Tiap task | **1x di awal saja** |
+| **Speed** | Lambat (frequent stops) | **Cepat (continuous)** |
+| **Best for** | Production, Review tiap step | **MVP, Prototype, Bootstrap** |
+
+### Workflow
+
+```
+1. Baca PROGRESS.md → Identify ALL pending tasks
+2. Tampilkan summary semua task
+3. User pilih commit mode:
+   a. Atomic (commit per fitur) ← Recommended
+   b. Batch (single commit)
+4. User confirm: "Proceed with all {N} tasks?"
+5. Execute semua task tanpa berhenti
+6. Commit & push (sesuai mode)
+7. Generate execution summary
+```
+
+### Commit Modes
+
+**Mode A: Atomic Commits (Recommended)**
+```
+feat: add user authentication [BATCH_AGENT_20250203_201500]
+feat: setup database schema [BATCH_AGENT_20250203_201500]
+feat: create dashboard page [BATCH_AGENT_20250203_201500]
+feat: implement profile page [BATCH_AGENT_20250203_201500]
+```
+- ✅ Easier code review
+- ✅ Selective rollback
+- ✅ Better bisect
+
+**Mode B: Single Batch Commit**
+```
+feat: implement batch tasks [BATCH_AGENT_20250203_201500]
+- User authentication system
+- Database schema setup
+- Dashboard page
+- Profile page
+```
+- ✅ Faster execution
+- ✅ Simple history
+- ✅ Good for MVP
+
+### Contoh Penggunaan
+
+```markdown
+User: "@workflow/BATCH_TASK_AGENT.md — execute all pending tasks"
+
+BATCH_TASK_AGENT:
+📋 Found 5 pending tasks:
+   [HIGH] 1. User authentication
+   [HIGH] 2. Database schema
+   [MEDIUM] 3. Dashboard page
+   [MEDIUM] 4. Profile page
+   [LOW] 5. Settings page
+
+Commit mode?
+   a) Atomic (commit per fitur)
+   b) Batch (single commit)
+
+User: "a"
+
+BATCH_TASK_AGENT:
+Proceed with all 5 tasks? (yes/no)
+
+User: "yes"
+
+BATCH_TASK_AGENT:
+🚀 Executing all tasks...
+   Task 1/5: ✅ User authentication
+   Task 2/5: ✅ Database schema
+   Task 3/5: ✅ Dashboard page
+   Task 4/5: ✅ Profile page
+   Task 5/5: ✅ Settings page
+
+✅ All tasks completed!
+✅ 5 commits pushed to GitHub
+
+📊 Execution Summary:
+   - Total tasks: 5
+   - Successful: 5
+   - Failed: 0
+   - Time: 12 minutes
+```
+
+### Kapan Pakai?
+
+| Situasi | Pilihan |
+|---------|---------|
+| Startup MVP, 10+ fitur baru | **BATCH_TASK_AGENT** ✅ |
+| Prototype dengan deadline besok | **BATCH_TASK_AGENT** ✅ |
+| Bootstrap project baru | **BATCH_TASK_AGENT** ✅ |
+| Backlog 20 task jelas requirement | **BATCH_TASK_AGENT** ✅ |
+| Production bug fix | TASK_AGENT ✅ |
+| Feature kompleks perlu review | TASK_AGENT ✅ |
+| Team project dengan code review | TASK_AGENT ✅ |
+
+---
+
 ## 📊 MANAGER_AGENT — Change Management {#manager-agent}
 
 **Gunakan saat:** Change request (bug, feature), update dokumentasi, approve deployment
@@ -237,7 +351,7 @@ INIT_AGENT:
 ✅ "Selesai! Dev server: http://localhost:5173"
 ```
 
-**Step 2: TASK_AGENT — Build**
+**Step 2a: TASK_AGENT — Build (Per Task)**
 ```markdown
 User: "@workflow/TASK_AGENT.md — build todo feature"
 
@@ -255,6 +369,32 @@ TASK_AGENT:
 ✅ Apply migration
 ✅ Commit & push
 ✅ Mark completed
+```
+
+**Step 2b: BATCH_TASK_AGENT — Build (All Tasks)**
+```markdown
+User: "@workflow/BATCH_TASK_AGENT.md — execute all pending tasks"
+
+BATCH_TASK_AGENT:
+📋 Found 3 pending tasks:
+   [HIGH] 1. Database schema
+   [HIGH] 2. Halaman /todos
+   [MEDIUM] 3. Form create
+
+Commit mode? (atomic/batch)
+User: "atomic"
+
+Proceed with all 3 tasks? (yes/no)
+User: "yes"
+
+BATCH_TASK_AGENT:
+🚀 Executing...
+   Task 1/3: ✅ Database schema
+   Task 2/3: ✅ Halaman /todos
+   Task 3/3: ✅ Form create
+
+✅ All tasks completed!
+✅ 3 commits pushed
 ```
 
 **Step 3: MANAGER_AGENT — Change**
@@ -280,7 +420,8 @@ File-file ini ada di folder `/workflow/` starter kit:
 |------|-----------|
 | `AGENT-GUIDE.md` | Panduan lengkap semua agent |
 | `INIT_AGENT.md` | Setup project baru |
-| `TASK_AGENT.md` | Implementasi fitur |
+| `TASK_AGENT.md` | Implementasi fitur (per task) |
+| `BATCH_TASK_AGENT.md` | Implementasi semua task sekaligus |
 | `MANAGER_AGENT.md` | Change management |
 | `PRD.md` | Product Requirements Document |
 | `TDD.md` | Technical Design Document |
