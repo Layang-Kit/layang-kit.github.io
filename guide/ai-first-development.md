@@ -6,14 +6,16 @@ Panduan menggunakan **3 AI Agent** untuk mengembangkan aplikasi dengan LayangKit
 
 ## 🎯 Overview {#overview}
 
-Project ini menggunakan **4 AI Agent** yang bekerja sama:
+Project ini menggunakan **5 AI Agent** yang bekerja sama:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     AI AGENT WORKFLOW                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  INIT_AGENT → TASK_AGENT / BATCH_TASK_AGENT → MANAGER_AGENT     │
+│  INIT_AGENT → TASK_AGENT / BATCH_TASK_AGENT → TEST_AGENT        │
+│                                                         ↓       │
+│                                              MANAGER_AGENT      │
 │                                                                 │
 │  1. INIT_AGENT: Setup project & dokumentasi                     │
 │     └── Buat PRD.md, TDD.md, ui-kit.html, PROGRESS.md           │
@@ -24,7 +26,10 @@ Project ini menggunakan **4 AI Agent** yang bekerja sama:
 │  2b. BATCH_TASK_AGENT: Implementasi semua task sekaligus        │
 │      └── Execute ALL pending tasks → Commit(s) → Done           │
 │                                                                 │
-│  3. MANAGER_AGENT: Change management                            │
+│  3. TEST_AGENT: Testing & Quality Assurance                     │
+│     └── Analyze → Write tests → Fix broken → Update PROGRESS    │
+│                                                                 │
+│  4. MANAGER_AGENT: Change management                            │
 │     └── Update docs → Approve → Release notes                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -46,7 +51,10 @@ Gunakan command ini untuk memulai:
 # 2b. Implementasi SEMUA fitur sekaligus (MVP mode)
 "@workflow/BATCH_TASK_AGENT.md — execute all pending tasks"
 
-# 3. Manage changes
+# 3. Testing & Quality Assurance
+"@workflow/TEST_AGENT.md — write tests for recent features"
+
+# 4. Manage changes
 "@workflow/MANAGER_AGENT.md — handle this change"
 ```
 
@@ -269,6 +277,111 @@ BATCH_TASK_AGENT:
 
 ---
 
+## 🧪 TEST_AGENT — Testing & Quality Assurance {#test-agent}
+
+**Gunakan saat:** Menulis test, fix broken tests, analyze coverage, quality check
+
+### Philosophy: Test What Matters
+
+> **Not everything needs a test.** TEST_AGENT fokus pada **high-impact tests** saja.
+
+### Test Type Selection
+
+| Feature Type | Unit | Integration | E2E |
+|--------------|------|-------------|-----|
+| `lib/auth/password.ts` | ✅ | ❌ | ❌ |
+| `lib/email/resend.ts` | ✅ | ✅ (mocked) | ❌ |
+| `/api/users/+server.ts` | ❌ | ✅ | ❌ |
+| `/register/+page.svelte` | ❌ | ✅ | ✅ (Auth flow) |
+| Auth lifecycle (multi-page) | ❌ | ❌ | ✅ **Required** |
+
+### E2E Test Decision Framework
+
+**E2E tests are EXPENSIVE** (slow, flaky). Gunakan **3-Criteria Rule**:
+
+Sebelum tulis E2E, cek apakah fitur memenuhi **minimal 2 dari 3**:
+
+1. **Cross-page interaction** - melibatkan multiple routes
+2. **Critical business value** - failure = lost revenue/users
+3. **Complex user flow** - multiple decisions/steps
+
+**Contoh:**
+- ✅ Register → Verify Email → Login → Onboarding (Meets all 3)
+- ✅ Checkout → Payment → Confirmation (Meets #2 and #3)
+- ❌ View Profile Page (Meets 0 - use integration test)
+
+### Critical Workflows for E2E (LayangKit)
+
+**HANYA 4 flow ini yang butuh E2E:**
+
+1. **Authentication Lifecycle** (HIGHEST)
+   ```
+   Register → Verify Email → Login → Dashboard → Logout
+   ```
+
+2. **Password Recovery** (HIGH)
+   ```
+   Forgot Password → Email → Reset → Login
+   ```
+
+3. **Profile with Image Upload** (MEDIUM)
+   ```
+   Login → Edit Profile → Upload Avatar → Save
+   ```
+
+4. **Google OAuth Flow** (MEDIUM)
+   ```
+   Click Google Login → OAuth → Callback → Dashboard
+   ```
+
+### Workflow
+
+```
+1. Entry point:
+   - User mentions @workflow/TEST_AGENT.md
+   - CI reports test failures
+   - Coverage drops below threshold
+
+2. Analyze:
+   - Read PROGRESS.md for untested features
+   - Run npm run test:coverage
+   - Apply E2E Decision Framework
+
+3. Implement tests:
+   - Unit tests for lib modules
+   - Integration tests for API/routes
+   - E2E tests (only if meets criteria)
+
+4. Update PROGRESS.md test status
+5. Push test updates
+```
+
+### Contoh Penggunaan
+
+```markdown
+User: "@workflow/TEST_AGENT.md — write tests for auth"
+
+TEST_AGENT:
+📋 Analyzing auth module...
+   Password hashing: ❌ No unit tests
+   Login API: ❌ No integration tests
+   Auth flow: ❌ No E2E tests
+
+🎯 Applying E2E Decision Framework:
+   Auth flow: Cross-page ✅ + Critical ✅ + Complex ✅
+   → E2E REQUIRED
+
+🔧 Writing tests...
+   ✅ Unit: password.test.ts
+   ✅ Integration: login.test.ts
+   ✅ E2E: auth-lifecycle.spec.ts
+
+📊 Coverage: 45% → 78%
+✅ All tests passing
+```
+
+---
+
 ## 📊 MANAGER_AGENT — Change Management {#manager-agent}
 
 **Gunakan saat:** Change request (bug, feature), update dokumentasi, approve deployment
@@ -422,6 +535,7 @@ File-file ini ada di folder `/workflow/` starter kit:
 | `INIT_AGENT.md` | Setup project baru |
 | `TASK_AGENT.md` | Implementasi fitur (per task) |
 | `BATCH_TASK_AGENT.md` | Implementasi semua task sekaligus |
+| `TEST_AGENT.md` | Testing & Quality Assurance |
 | `MANAGER_AGENT.md` | Change management |
 | `PRD.md` | Product Requirements Document |
 | `TDD.md` | Technical Design Document |
