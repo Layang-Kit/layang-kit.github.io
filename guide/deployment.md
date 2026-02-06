@@ -1,16 +1,17 @@
 # 🚀 Deployment Guide
 
-Deploy aplikasi SvelteKit ke Cloudflare Pages dalam 10 menit.
+Deploy aplikasi SvelteKit ke Cloudflare Pages via GitHub dalam 10 menit.
 
 ---
 
 ## 🎯 Overview
 
-Cloudflare Pages adalah hosting static + edge functions yang:
+Cloudflare Pages dengan Git Integration adalah cara termudah untuk deploy:
+- ✅ **Auto-deploy** - Push ke GitHub = auto deploy
 - ✅ **Gratis** - Unlimited requests, 500 builds/month
 - ✅ **Global CDN** - 300+ lokasi edge
 - ✅ **Edge Functions** - SvelteKit SSR berjalan di edge
-- ✅ **D1 Integration** - Database langsung terhubung
+- ✅ **D1 Integration** - Database via Dashboard
 
 ---
 
@@ -19,56 +20,50 @@ Cloudflare Pages adalah hosting static + edge functions yang:
 Sebelum deploy, pastikan:
 
 ```markdown
+- [ ] Project sudah di-push ke GitHub
 - [ ] npm run build berhasil locally
-- [ ] npm run preview berjalan tanpa error
 - [ ] Database D1 sudah dibuat di Cloudflare
 - [ ] Environment variables sudah disiapkan
-- [ ] wrangler.toml sudah benar
+- [ ] `wrangler.toml` ada (untuk local dev)
 ```
 
 ---
 
-## 🚀 Deployment Steps
+## 🚀 Deployment Steps (Git Integration)
 
-### Step 1: Build Project (1 menit)
-
-```bash
-# Build untuk production
-npm run build
-```
-
-**Output:**
-```
-.svelte-kit/cloudflare/  ← Build output
-```
-
-### Step 2: Deploy (1 menit)
-
-```bash
-# Deploy ke Cloudflare Pages
-npm run deploy
-```
-
-**Output:**
-```
-✨ Successfully published your script to:
-https://my-app.pages.dev
-```
-
-🎉 **Selesai!** Aplikasi sudah online!
-
----
-
-## ⚙️ Environment Variables Production
-
-Environment variables di Cloudflare Pages diatur via Dashboard (bukan .env).
-
-### Cara Set Environment Variables:
+### Step 1: Buat Project di Dashboard (2 menit)
 
 1. Buka [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. Pages → Pilih project kamu
-3. Settings → Environment variables
-4. Add variables:
+2. Workers & Pages → **Create application**
+3. Pilih **Pages** → **Connect to Git**
+4. Connect GitHub account → Pilih repository kamu
+5. Configure build:
+   - **Project name:** `my-app` (bebas)
+   - **Production branch:** `main`
+   - **Framework preset:** `SvelteKit`
+   - **Build command:** `npm run build`
+   - **Build output directory:** `.svelte-kit/cloudflare`
+
+6. Click **Save and Deploy**
+
+### Step 2: Set D1 Database Binding (WAJIB)
+
+Setelah project terbuat:
+
+1. Pilih project kamu → **Settings** → **Bindings**
+2. Click **Add** → **D1 database bindings**
+3. **Variable name:** `DB`
+4. **D1 database:** Pilih database yang sudah dibuat
+5. Click **Save**
+
+::: warning ⚠️ Penting
+Tanpa setting ini, aplikasi akan error 500 karena tidak bisa connect ke database!
+:::
+
+### Step 3: Set Environment Variables
+
+1. Settings → **Environment variables**
+2. Add variables (Production environment):
 
 **Required:**
 ```
@@ -91,16 +86,18 @@ GOOGLE_CLIENT_ID=xxx
 GOOGLE_CLIENT_SECRET=xxx
 ```
 
-### Production Database
+### Step 4: Redeploy
 
-Database D1 sudah otomatis terhubung via `wrangler.toml`:
+1. **Deployments** tab
+2. Pilih deployment terbaru → **Retry deployment**
 
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "my-app-db"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+Atau push commit baru ke GitHub:
+```bash
+git commit --allow-empty -m "trigger redeploy"
+git push
 ```
+
+🎉 **Selesai!** Aplikasi sudah online di `https://my-app.pages.dev`
 
 ---
 
@@ -131,8 +128,8 @@ npx wrangler d1 execute DB --remote --command ".tables"
 
 ### Setup Custom Domain
 
-1. Dashboard → Pages → Project → Custom domains
-2. Click "Set up a custom domain"
+1. Dashboard → Pages → Project → **Custom domains**
+2. Click **Set up a custom domain**
 3. Enter domain: `yourdomain.com`
 4. Follow DNS setup instructions
 
@@ -167,9 +164,9 @@ Target: 192.0.2.1  (Cloudflare akan provide)
 - [ ] HTTPS enabled (otomatis di Cloudflare)
 
 ### Database
+- [ ] D1 binding di-set di Dashboard (Settings → Bindings)
 - [ ] Migration applied ke production
 - [ ] Seed data (jika perlu)
-- [ ] Backup strategy (export periodically)
 
 ### Features
 - [ ] Register/Login working
@@ -186,77 +183,72 @@ Target: 192.0.2.1  (Cloudflare akan provide)
 
 ## 🔧 Troubleshooting Deployment
 
-### Error: "D1 binding not found"
+### Error 500 Setelah Deploy
 
-**Cause:** Database ID salah atau binding tidak terdeteksi.
+**Penyebab #1: D1 Binding Belum Di-set**
 
-**Fix:**
-```bash
-# Check database_id
-npx wrangler d1 list
-
-# Update wrangler.toml dengan ID yang benar
+```
+Solution:
+1. Dashboard → Project → Settings → Bindings
+2. Add D1 database binding → Variable name: DB
+3. Save → Redeploy
 ```
 
-### Error: "Build failed"
+**Penyebab #2: Environment Variables Belum Di-set**
 
-**Check:**
+```
+Solution:
+1. Settings → Environment variables
+2. Add semua required variables
+3. Redeploy
+```
+
+**Penyebab #3: Build Failed**
+
 ```bash
-# Build locally dulu
+# Check build locally
+cd guide/my-app
 npm run build
-
-# Check error message
 ```
 
 Common issues:
 - TypeScript errors → Run `npm run check`
 - Missing imports → Check case sensitivity
-- Environment variables → Pastikan semua required vars di-set
+- Node version mismatch → Set di Dashboard: Settings → Build & deployments → Build system version
 
-### Error: "Function exceeds size limit"
+### Error: "D1 binding not found"
 
-**Cause:** Bundle size terlalu besar.
+**Cek:**
+1. Sudah set binding di Dashboard? (Settings → Bindings)
+2. Variable name benar? (harus `DB`)
+3. Sudah redeploy setelah set binding?
 
-**Fix:**
-```javascript
-// vite.config.ts
-export default defineConfig({
-  build: {
-    rollupOptions: {
-      external: ['some-heavy-package']
-    }
-  }
-});
-```
+### Build System Version
 
-### Error: "Database migration failed"
+Jika build failed, cek build system version:
 
-**Fix:**
-```bash
-# Check current migrations status
-npx wrangler d1 migrations list DB --remote
-
-# Apply manual
-npx wrangler d1 execute DB --remote --file=./drizzle/0001_patch.sql
-```
+1. Dashboard → Project → Settings → Build & deployments
+2. Build system version: **Version 2 (Beta)**
+3. Build command: `npm run build`
+4. Build output directory: `.svelte-kit/cloudflare`
 
 ---
 
 ## 🔄 Continuous Deployment
 
-### Git Integration
+Dengan Git Integration, setiap push ke branch `main` akan otomatis deploy ke production.
 
-Cloudflare Pages bisa auto-deploy dari GitHub/GitLab:
+### Preview Deployments
 
-1. Dashboard → Pages → Create a project
-2. Connect to Git
-3. Select repository
-4. Build settings:
-   - Build command: `npm run build`
-   - Build output: `.svelte-kit/cloudflare`
-5. Environment variables → Add semua variables
+Push ke branch lain akan membuat preview deployment:
+```bash
+git checkout -b feature/new-page
+git push origin feature/new-page
+```
 
-### Deploy Hooks
+Preview URL: `https://feature-new-page.my-app.pages.dev`
+
+### Deploy Hooks (Optional)
 
 Untuk trigger deploy dari external:
 
@@ -267,6 +259,24 @@ Untuk trigger deploy dari external:
 ```bash
 curl -X POST https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/xxxxx
 ```
+
+---
+
+## 📝 wrangler.toml (Local Development)
+
+File `wrangler.toml` diperlukan untuk **local development** saja. Untuk production, semua binding diatur via Dashboard.
+
+```toml
+# wrangler.toml - Untuk local development
+[[d1_databases]]
+binding = "DB"
+database_name = "my-app-db"
+database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+```
+
+::: info ℹ️ Info
+Untuk Git Integration deployment, `wrangler.toml` **tidak** digunakan untuk production binding. Semua binding harus di-set via Dashboard.
+:::
 
 ---
 
@@ -335,6 +345,7 @@ export const handle = async ({ event, resolve }) => {
 
 Aplikasi kamu sekarang:
 - ✅ Live di internet
+- ✅ Auto-deploy dari GitHub
 - ✅ Dihost di 300+ edge locations
 - ✅ Dapat HTTPS otomatis
 - ✅ Scalable tanpa batas
