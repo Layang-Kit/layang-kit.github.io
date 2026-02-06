@@ -156,10 +156,12 @@ export const actions = {
 ### 2. SQL Injection Prevention
 
 ```typescript
-// ✅ GOOD: Drizzle ORM (parameterized queries)
-await locals.db.select()
-  .from(users)
-  .where(eq(users.email, userEmail)); // Safe!
+// ✅ GOOD: Kysely (parameterized queries)
+await locals.db
+  .selectFrom('users')
+  .where('email', '=', userEmail) // Safe - parameterized!
+  .selectAll()
+  .execute();
 
 // ❌ BAD: String concatenation
 await locals.db.execute(`

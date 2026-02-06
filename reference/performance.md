@@ -95,8 +95,8 @@ CREATE INDEX idx_posts_author_id ON posts(author_id);
 // ✅ GOOD: Parallel queries
 export const load = async ({ locals }) => {
   const [users, posts, stats] = await Promise.all([
-    locals.db.query.users.findMany({ limit: 10 }),
-    locals.db.query.posts.findMany({ limit: 10 }),
+    locals.db.selectFrom('users').limit(10).selectAll().execute(),
+    locals.db.selectFrom('posts').limit(10).selectAll().execute(),
     getDashboardStats(locals.db)
   ]);
   
@@ -105,8 +105,8 @@ export const load = async ({ locals }) => {
 
 // ❌ BAD: Sequential queries (slower)
 export const load = async ({ locals }) => {
-  const users = await locals.db.query.users.findMany({ limit: 10 });
-  const posts = await locals.db.query.posts.findMany({ limit: 10 }); // Wait for users
+  const users = await locals.db.selectFrom('users').limit(10).selectAll().execute();
+  const posts = await locals.db.selectFrom('posts').limit(10).selectAll().execute(); // Wait for users
   const stats = await getDashboardStats(locals.db); // Wait for posts
   
   return { users, posts, stats };
@@ -124,12 +124,13 @@ export const load = async ({ locals, url }) => {
   
   // Count total untuk pagination
   const [posts, countResult] = await Promise.all([
-    locals.db.query.posts.findMany({
-      limit,
-      offset,
-      orderBy: desc(posts.createdAt)
-    }),
-    locals.db.select({ count: count() }).from(posts)
+    locals.db.selectFrom('posts')
+      .limit(limit)
+      .offset(offset)
+      .orderBy('created_at', 'desc')
+      .selectAll()
+      .execute(),
+    locals.db.selectFrom('posts').select(({ fn }) => [fn.count('id').as('count')]).executeTakeFirst()
   ]);
   
   const totalPages = Math.ceil(countResult[0].count / limit);
@@ -272,22 +273,21 @@ for (const userData of usersList) {
 ### 2. Query Optimization
 
 ```typescript
-// ✅ GOOD: Use relations untuk avoid N+1
-const usersWithPosts = await locals.db.query.users.findMany({
-  with: {
-    posts: {
-      limit: 5,
-      orderBy: desc(posts.createdAt)
-    }
-  }
-});
+// ✅ GOOD: Use JOIN untuk avoid N+1
+const usersWithPosts = await locals.db
+  .selectFrom('users')
+  .leftJoin('posts', 'users.id', 'posts.author_id')
+  .select(['users.id', 'users.name', 'posts.title', 'posts.created_at'])
+  .execute();
 
 // ❌ BAD: N+1 query
-const users = await locals.db.query.users.findMany();
+const users = await locals.db.selectFrom('users').selectAll().execute();
 for (const user of users) {
-  user.posts = await locals.db.query.posts.findMany({
-    where: eq(posts.authorId, user.id) // Query per user!
-  });
+  user.posts = await locals.db
+    .selectFrom('posts')
+    .where('author_id', '=', user.id)
+    .selectAll()
+    .execute(); // Query per user!
 }
 ```
 
@@ -392,7 +392,7 @@ Cloudflare otomatis compress:
 // Di server
 export const load = async ({ locals }) => {
   performance.mark('db-query-start');
-  const users = await locals.db.query.users.findMany();
+  const users = await locals.db.selectFrom('users').selectAll().execute();
   performance.mark('db-query-end');
   
   performance.measure('db-query', 'db-query-start', 'db-query-end');

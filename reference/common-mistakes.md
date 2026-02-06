@@ -62,7 +62,7 @@ npm run db:migrate:local
   // JANGAN: Query DB di browser!
   import { db } from '$lib/db';
   
-  const users = await db.query.users.findMany(); // ❌ Error: db not defined
+  const users = await db.selectFrom('users').selectAll().execute(); // ❌ Error: db not defined
 </script>
 ```
 
@@ -70,7 +70,7 @@ npm run db:migrate:local
 ```typescript
 // +page.server.ts
 export const load = async ({ locals }) => {
-  const users = await locals.db.query.users.findMany();
+  const users = await locals.db.selectFrom('users').selectAll().execute();
   return { users };
 };
 ```
@@ -232,7 +232,7 @@ export const actions = {
 ```typescript
 // +page.server.ts
 export const load = async ({ locals }) => {
-  const users = await locals.db.query.users.findMany();
+  const users = await locals.db.selectFrom('users').selectAll().execute();
   return { users };
 };
 ```
@@ -256,7 +256,7 @@ export const load = async ({ locals }) => {
 **❌ Kesalahan:**
 ```typescript
 export const load = async ({ locals }) => {
-  const posts = await locals.db.query.posts.findMany();
+  const posts = await locals.db.selectFrom('posts').selectAll().execute();
   // 10,000 posts! Browser crash!
   return { posts };
 };
@@ -269,10 +269,12 @@ export const load = async ({ locals, url }) => {
   const limit = 20;
   const offset = (page - 1) * limit;
   
-  const posts = await locals.db.query.posts.findMany({
-    limit,
-    offset
-  });
+  const posts = await locals.db
+    .selectFrom('posts')
+    .limit(limit)
+    .offset(offset)
+    .selectAll()
+    .execute();
   
   return { posts, page };
 };

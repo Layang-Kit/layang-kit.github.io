@@ -115,14 +115,19 @@ Error: D1_EXECUTION_ERROR: Timeout
 **Optimasi query:**
 ```typescript
 // ✅ Tambahkan limit
-const users = await locals.db.query.users.findMany({
-  limit: 100 // Jangan ambil semua!
-});
+// ✅ Tambahkan limit
+const users = await locals.db
+  .selectFrom('users')
+  .limit(100)
+  .selectAll()
+  .execute();
 
 // ✅ Gunakan index
-const user = await locals.db.query.users.findFirst({
-  where: eq(users.email, email)  // Email harus indexed
-});
+const user = await locals.db
+  .selectFrom('users')
+  .where('email', '=', email)
+  .selectAll()
+  .executeTakeFirst();
 ```
 
 #### 2. Concurrent Writes
@@ -131,12 +136,12 @@ D1 punya batasan untuk concurrent writes:
 ```typescript
 // ❌ Hindari: Banyak write bersamaan
 await Promise.all(
-  users.map(u => locals.db.insert(users).values(u))
+  users.map(u => locals.db.insertInto('users').values(u).execute())
 );
 
 // ✅ Gunakan: Sequential writes
 for (const user of users) {
-  await locals.db.insert(users).values(user);
+  await locals.db.insertInto('users').values(user).execute();
 }
 ```
 
@@ -164,19 +169,21 @@ Mencoba insert data dengan foreign key yang tidak ada.
 
 ```typescript
 // ✅ Check existence terlebih dahulu
-const user = await locals.db.query.users.findFirst({
-  where: eq(users.id, userId)
-});
+const user = await locals.db
+  .selectFrom('users')
+  .where('id', '=', userId)
+  .selectAll()
+  .executeTakeFirst();
 
 if (!user) {
   return fail(400, { error: 'User tidak ditemukan' });
 }
 
 // Insert dengan foreign key
-await locals.db.insert(posts).values({
+await locals.db.insertInto('posts').values({
   title: 'My Post',
-  authorId: userId // Foreign key
-});
+  author_id: userId // Foreign key
+}).execute();
 ```
 
 **Debug foreign keys:**
@@ -210,7 +217,7 @@ export const actions = {
     const email = form.get('email');
     
     try {
-      await locals.db.insert(users).values({ email });
+      await locals.db.insertInto('users').values({ email }).execute();
     } catch (error) {
       if (error.message?.includes('UNIQUE constraint failed')) {
         return fail(400, { error: 'Email sudah terdaftar' });
@@ -225,9 +232,11 @@ Atau check dulu sebelum insert:
 
 ```typescript
 // ✅ Check existing
-const existing = await locals.db.query.users.findFirst({
-  where: eq(users.email, email)
-});
+const existing = await locals.db
+  .selectFrom('users')
+  .where('email', '=', email)
+  .selectAll()
+  .executeTakeFirst();
 
 if (existing) {
   return fail(400, { error: 'Email sudah terdaftar' });
@@ -384,23 +393,25 @@ export const users = sqliteTable('users', {
 
 ```typescript
 // ✅ Selalu pakai limit
-const users = await locals.db.query.users.findMany({
-  limit: 20,
-  offset: page * 20
-});
+const users = await locals.db
+  .selectFrom('users')
+  .limit(20)
+  .offset(page * 20)
+  .selectAll()
+  .execute();
 ```
 
 #### 3. Select Kolom yang Diperlukan Saja
 
 ```typescript
 // ✅ Select specific columns
-const users = await locals.db.select({
-  id: users.id,
-  name: users.name
-}).from(users);
+const users = await locals.db
+  .selectFrom('users')
+  .select(['id', 'name'])
+  .execute();
 
 // ❌ Hindari select all untuk data besar
-// const users = await locals.db.select().from(users);
+// const users = await locals.db.selectFrom('users').selectAll().execute();
 ```
 
 ---

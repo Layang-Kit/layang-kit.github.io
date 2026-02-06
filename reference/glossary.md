@@ -6,7 +6,7 @@ Daftar istilah teknis yang digunakan dalam LayangKit, dijelaskan dengan sederhan
 
 ## 🪁 LayangKit
 
-**LayangKit** adalah edge-first full-stack starter template yang dibangun dengan SvelteKit + Cloudflare D1 + Drizzle ORM.
+**LayangKit** adalah edge-first full-stack starter template yang dibangun dengan SvelteKit + Cloudflare D1 + Drizzle ORM (schema/migrations) + Kysely (queries).
 
 **Mengapa "LayangKit"?**
 - 🪁 **Layang** = Terbang tinggi, ringan, dan cepat

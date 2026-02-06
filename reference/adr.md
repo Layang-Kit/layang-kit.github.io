@@ -80,13 +80,13 @@ Menggunakan **Cloudflare D1 (SQLite)** sebagai database utama.
 // ✅ RECOMMENDED: Server Load
 // +page.server.ts
 export const load = async ({ locals }) => {
-  const users = await locals.db.query.users.findMany();
+  const users = await locals.db.selectFrom('users').selectAll().execute();
   return { users }; // Data di-embed di HTML
 };
 
 // +page.svelte
 <script>
-  export let data; // Langsung ada, no loading state
+  let { data } = $props(); // Langsung ada, no loading state (Svelte 5)
 </script>
 ```
 
@@ -171,23 +171,25 @@ export const actions = {
 
 ---
 
-## ADR-005: Drizzle ORM vs Prisma
+## ADR-005: Drizzle ORM + Kysely vs Prisma
 
 **Status:** ✅ Accepted  
 **Date:** 2024-02-01  
+**Updated:** 2024-02-06  
 **Context:** Butuh ORM yang works dengan Cloudflare Workers
 
 ### Decision
-Menggunakan **Drizzle ORM** daripada Prisma.
+Menggunakan **Drizzle ORM untuk schema/migrations** dan **Kysely untuk runtime queries**.
 
 ### Alasan
 
-**Kenapa Drizzle:**
-1. **Cloudflare native** - Works tanpa edge compatibility issues
-2. **SQL-like syntax** - Familiar untuk developer SQL
-3. **Type-safe** - Full TypeScript support
-4. **Lightweight** - Bundle size kecil
-5. **No binary** - Pure JavaScript/TypeScript
+**Kenapa Drizzle + Kysely:**
+1. **Cloudflare native** - Keduanya works tanpa edge compatibility issues
+2. **Separation of concerns** - Drizzle untuk schema, Kysely untuk queries
+3. **Better control** - Kysely lebih explicit, tidak ada "magic" relations
+4. **Smaller bundle** - Kysely lebih lightweight dari Drizzle ORM runtime
+5. **SQL-like syntax** - Familiar untuk developer SQL
+6. **Type-safe** - Full TypeScript support
 
 **Kenapa BUKAN Prisma:**
 1. Butuh binary compilation untuk edge
@@ -195,12 +197,28 @@ Menggunakan **Drizzle ORM** daripada Prisma.
 3. Connection pooling issues di Workers
 4. Slower cold start
 
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Schema & Migrations        Runtime Queries             │
+│  ┌─────────────┐           ┌─────────────┐              │
+│  │   Drizzle   │           │   Kysely    │              │
+│  │   Schema    │ ────────▶ │   Queries   │              │
+│  │   + Kit     │           │   (D1)      │              │
+│  └─────────────┘           └─────────────┘              │
+│                                                           │
+│  Best of both worlds!                                     │
+└─────────────────────────────────────────────────────────┘
+```
+
 ### Consequences
-- ✅ Works seamlessly di Cloudflare Workers
-- ✅ Query terlihat seperti SQL
-- ✅ Auto-completion & type safety
-- ❌ Less mature ecosystem vs Prisma
-- ❌ No built-in migration runner (pakai Drizzle Kit)
+- ✅ Drizzle Kit terbaik untuk migrations
+- ✅ Kysely lebih predictable untuk queries
+- ✅ Smaller bundle size
+- ✅ Full type safety
+- ❌ Harus maintain 2 type definitions
+- ❌ No "magic" relations (harus manual join)
 
 ---
 

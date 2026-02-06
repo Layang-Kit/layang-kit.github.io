@@ -20,11 +20,13 @@ Solusi untuk masalah login, register, session, dan OAuth.
 **Solusi:**
 ```typescript
 // Check status email
-const user = await locals.db.query.users.findFirst({
-  where: eq(users.email, email)
-});
+const user = await locals.db
+  .selectFrom('users')
+  .where('email', '=', email)
+  .selectAll()
+  .executeTakeFirst();
 
-if (user && !user.emailVerified) {
+if (user && !user.email_verified) {
   // Redirect ke halaman verifikasi
   throw redirect(302, '/verify-email?email=' + email);
 }
@@ -226,12 +228,12 @@ Resend memerlukan domain verification:
 **Solusi:**
 ```typescript
 // Check token di database
-const tokenRecord = await locals.db.query.passwordResetTokens.findFirst({
-  where: and(
-    eq(passwordResetTokens.tokenHash, hash),
-    gt(passwordResetTokens.expiresAt, Date.now())
-  )
-});
+const tokenRecord = await locals.db
+  .selectFrom('password_reset_tokens')
+  .where('token_hash', '=', hash)
+  .where('expires_at', '>', Date.now())
+  .selectAll()
+  .executeTakeFirst();
 
 if (!tokenRecord || tokenRecord.used) {
   return fail(400, { error: 'Token invalid atau expired' });
