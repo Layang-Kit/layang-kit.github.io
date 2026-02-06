@@ -178,9 +178,50 @@ TASK_AGENT:
 | Aspek | TASK_AGENT | BATCH_TASK_AGENT |
 |-------|------------|------------------|
 | **Execution** | 1 task per run | **Semua task sekaligus** |
+| **Work Pattern** | **Concurrent** — Buka multiple tabs/terminal untuk task berbeda | **Sequential** — Urut eksekusi, tapi **bisa ditinggal** |
 | **Konfirmasi** | Tiap task | **1x di awal saja** |
 | **Speed** | Lambat (frequent stops) | **Cepat (continuous)** |
 | **Best for** | Production, Review tiap step | **MVP, Prototype, Bootstrap** |
+
+### Work Pattern Detail
+
+**TASK_AGENT — Concurrent Mode:**
+```
+Terminal 1                    Terminal 2                    Terminal 3
+┌─────────────────┐          ┌─────────────────┐          ┌─────────────────┐
+│ TASK_AGENT      │          │ TASK_AGENT      │          │ TASK_AGENT      │
+│ Task: Auth      │    +     │ Task: Database  │    +     │ Task: UI        │
+│ (独立工作)       │          │ (独立工作)       │          │ (独立工作)       │
+└─────────────────┘          └─────────────────┘          └─────────────────┘
+        │                            │                            │
+        ▼                            ▼                            ▼
+   [独立分支]                      [独立分支]                      [独立分支]
+   独立 commit                   独立 commit                   独立 commit
+```
+- ✅ Buka **multiple terminal/tabs** untuk kerjain task berbeda secara **parallel**
+- ✅ Tiap task di branch berbeda, tidak saling ganggu
+- ✅ Ideal untuk tim yang mau kerjain fitur berbeda bersamaan
+- ⚠️ Perlu koordinasi untuk merge
+
+**BATCH_TASK_AGENT — Sequential Mode (Bisa Ditinggal):**
+```
+Single Terminal
+┌────────────────────────────────────────────────────────────────┐
+│ BATCH_TASK_AGENT                                               │
+│                                                                │
+│ Task 1 ──▶ Task 2 ──▶ Task 3 ──▶ Task 4 ──▶ Task 5            │
+│   │          │          │          │          │                │
+│   ▼          ▼          ▼          ▼          ▼                │
+│ [Done]     [Done]     [Done]     [Done]     [Done]            │
+│                                                                │
+│ "Execute all tasks?" ──▶ "Yes" ──▶ [BISA DITINGGAL!]          │
+│                                      ☕ 🍵 🍔                  │
+└────────────────────────────────────────────────────────────────┘
+```
+- ✅ **1x konfirmasi** di awal, kemudian **bisa ditinggal**
+- ✅ Agent kerja **urut & continuous** tanpa henti
+- ✅ Cocok untuk deadline, kerjain semua sambil meeting/santai
+- ✅ Tidak perlu monitoring, dapat summary di akhir
 
 ### Workflow
 
@@ -264,6 +305,19 @@ BATCH_TASK_AGENT:
 ```
 
 ### Kapan Pakai?
+
+**Pilih berdasarkan Work Style:**
+
+| Situasi | Pilihan |
+|---------|---------|
+| Mau kerjain **1 task per terminal**, bisa parallel | **TASK_AGENT** ✅ |
+| Buka **multiple tabs** untuk task berbeda | **TASK_AGENT** ✅ |
+| Kerja bareng tim, tiap orang 1 task | **TASK_AGENT** ✅ |
+| Mau **tinggal**, nanti balik sudah selesai semua | **BATCH_TASK_AGENT** ✅ |
+| Deadline, butuh **speed** | **BATCH_TASK_AGENT** ✅ |
+| Sambil meeting/santai, agent kerja sendiri | **BATCH_TASK_AGENT** ✅ |
+
+**Pilih berdasarkan Project Type:**
 
 | Situasi | Pilihan |
 |---------|---------|
