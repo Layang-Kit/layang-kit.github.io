@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "LayangKit"
   text: "AI-Native Starter"
-  tagline: Build full-stack apps for FREE. AI Agents + Free Hosting + Free Database. From idea to production in hours.
+  tagline: Powered by Cloudflare. FREE hosting, FREE database, FREE storage + AI Agents. From idea to production in hours.
   actions:
     - theme: brand
       text: Get Started — It's Free
@@ -16,8 +16,8 @@ hero:
 features:
   - title: AI-Powered Development
     details: 5 AI Agents work for you. Product → Tech Lead → Developer → QA → DevOps. Just describe your idea.
-  - title: Zero Cost to Start
-    details: Free hosting, free database, free storage, free domain. Everything you need at $0/month.
+  - title: 100% Free (Thanks to Cloudflare)
+    details: Pages hosting ($0), D1 database ($0), R2 storage ($0), .pages.dev domain ($0).
   - title: Production Ready
     details: Auth, email, file upload included. Deploy to 300+ edge locations worldwide.
   - title: 10x Faster
@@ -26,7 +26,9 @@ features:
 
 ## The Problem
 
-Starting a new project means wasting time on:
+**Building full-stack apps is expensive and time-consuming.**
+
+Starting from scratch means:
 
 - Setup framework & tooling *(2-3 hours)*
 - Configure database & ORM *(2-4 hours)*  
@@ -41,9 +43,9 @@ Starting a new project means wasting time on:
 
 ## The Solution
 
-LayangKit eliminates all that setup. You get a **complete full-stack starter** with everything included:
+LayangKit is built entirely on **Cloudflare's free tier** — giving you enterprise-grade infrastructure at $0 cost.
 
-### What's Inside?
+### What's Inside? (All Free)
 
 | Feature | Status | Provider |
 |---------|--------|----------|
@@ -80,11 +82,17 @@ Live Application 🚀
 
 ---
 
-## Start Building (Free Forever)
+## Start Building (Free Forever on Cloudflare)
 
 ```bash
 npm create layang my-app
 ```
+
+All infrastructure runs on **Cloudflare's free tier**:
+- ✅ Pages (hosting)
+- ✅ D1 (database)
+- ✅ R2 (storage)
+- ✅ .pages.dev (domain)
 
 No credit card required. No trial period. **Actually free.**
 
