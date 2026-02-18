@@ -4,77 +4,101 @@ layout: home
 hero:
   name: "LayangKit"
   text: "AI-Native Starter"
-  tagline: Full-stack starter with FREE hosting, FREE database, FREE domain. From idea to production in hours.
+  tagline: Build full-stack apps for FREE. AI Agents + Free Hosting + Free Database. From idea to production in hours.
   actions:
     - theme: brand
-      text: Quick Start
+      text: Get Started — It's Free
       link: /guide/quick-start
     - theme: alt
-      text: Documentation
-      link: /guide/
+      text: Read Documentation
+      link: /guide/introduction
 
 features:
-  - title: 5 AI Agents
-    details: Product, Tech Lead, Developer, QA, DevOps. Describe your idea, agents build it.
-  - title: 10x Faster
-    details: From idea to production in 1 day. Not 1 month.
+  - title: AI-Powered Development
+    details: 5 AI Agents work for you. Product → Tech Lead → Developer → QA → DevOps. Just describe your idea.
+  - title: Zero Cost to Start
+    details: Free hosting, free database, free storage, free domain. Everything you need at $0/month.
   - title: Production Ready
-    details: Auth, database, file upload built-in. Deploy to 300+ edge locations.
-  - title: 100% Free Forever
-    details: Cloudflare hosting ($0), D1 database ($0), R2 storage ($0), .pages.dev domain ($0).
+    details: Auth, email, file upload included. Deploy to 300+ edge locations worldwide.
+  - title: 10x Faster
+    details: Skip 12+ hours of setup. Start coding features in minutes, not days.
 ---
 
-## Install
+## The Problem
+
+Starting a new project means wasting time on:
+
+- Setup framework & tooling *(2-3 hours)*
+- Configure database & ORM *(2-4 hours)*  
+- Setup authentication *(3-5 hours)*
+- Integrate email service *(1-2 hours)*
+- Setup file storage *(2-3 hours)*
+- Configure deployment *(2-4 hours)*
+
+**12-21 hours spent before writing a single feature.**
+
+---
+
+## The Solution
+
+LayangKit eliminates all that setup. You get a **complete full-stack starter** with everything included:
+
+### What's Inside?
+
+| Feature | Status | Provider |
+|---------|--------|----------|
+| **Framework** | ✅ SvelteKit 5 | Modern, fast, simple |
+| **Database** | ✅ D1 (SQLite) | Cloudflare, 5GB free |
+| **Authentication** | ✅ Built-in | Email + Google OAuth |
+| **Email Service** | ✅ Resend | 3,000 emails/month free |
+| **File Storage** | ✅ R2 | 10GB free, zero egress |
+| **Hosting** | ✅ Pages | 300+ edge locations |
+| **Domain** | ✅ Included | .pages.dev free |
+| **AI Workflow** | ✅ Native | 5 agents included |
+
+---
+
+## How It Works
+
+Describe your idea. AI Agents build it. You review and approve.
+
+```
+Your Idea
+    ↓
+@workflow/agents/product.md "I want to build a todo app..."
+    ↓
+├─ Product Agent      → Creates requirements
+├─ Tech Lead Agent    → Designs architecture  
+├─ Developer Agent    → Writes the code
+├─ QA Agent           → Tests everything
+└─ DevOps Agent       → Deploys to production
+    ↓
+Live Application 🚀
+```
+
+**Result:** From idea to deployed app in hours, not weeks.
+
+---
+
+## Start Building (Free Forever)
 
 ```bash
 npm create layang my-app
 ```
 
-The installer will guide you through setup.
+No credit card required. No trial period. **Actually free.**
 
 ---
 
-## What is LayangKit?
+## Learn More
 
-LayangKit is a **full-stack starter template** designed for developers who love free stuff:
-
-| Resource | Cost | Provider |
-|----------|------|----------|
-| **Hosting** | $0/month | Cloudflare Pages |
-| **Database** | $0/month | Cloudflare D1 (5GB) |
-| **File Storage** | $0/month | Cloudflare R2 (10GB) |
-| **Domain** | $0/month | .pages.dev included |
-| **Email** | $0/month | Resend (3,000/month) |
-
-**Start with $0. Scale when needed.**
-
-### 5 AI Agents Workflow:
-
-```
-Your Idea
-    ↓
-@workflow/agents/product.md "I want to build..."
-    ↓
-Product Agent      → Requirements
-Tech Lead Agent    → Technical Design  
-Developer Agent    → Code
-QA Agent           → Testing
-DevOps Agent       → Deploy
-    ↓
-Live Application
-```
+| Topic | Description |
+|-------|-------------|
+| [Introduction](/guide/introduction) | Philosophy, why we built this, who it's for |
+| [Quick Start](/guide/quick-start) | Install and run in 5 minutes |
+| [AI Agents](/guide/ai-first-development) | How the AI workflow works |
+| [Creating Features](/guide/creating-features) | Build your first feature |
 
 ---
 
-## Documentation
-
-| Topic | Link |
-|-------|------|
-| Quick Start | [/guide/quick-start](/guide/quick-start) |
-| AI Agents | [/guide/ai-first-development](/guide/ai-first-development) |
-| Configuration | [/guide/environment-variables](/guide/environment-variables) |
-| Deployment | [/guide/deployment](/guide/deployment) |
-
----
-
-[GitHub](https://github.com/Layang-Kit/layang-app)
+[View on GitHub](https://github.com/Layang-Kit/layang-app)
