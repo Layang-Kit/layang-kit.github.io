@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: "🪁 LayangKit"
-  text: "Edge-First Starter"
-  tagline: SvelteKit + Cloudflare D1 + Drizzle ORM. Auth, email, upload siap pakai. Deploy ke 300+ edge locations dalam 5 menit.
+  text: "AI-Native Starter"
+  tagline: SvelteKit + Cloudflare + 5 AI Agents. Dari ide ke production dalam hitungan jam, bukan minggu. 100% gratis.
   image:
     src: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/cloudflare-color.png
     alt: LayangKit Logo
@@ -13,52 +13,147 @@ hero:
       text: 🚀 Quick Start (5 Menit)
       link: /guide/quick-start
     - theme: alt
-      text: 📖 Panduan Lengkap
-      link: /guide/
+      text: 🤖 AI Workflow
+      link: /guide/ai-first-development
     - theme: alt
-      text: 🐙 GitHub
-      link: https://github.com/maulanashalihin/svelte-kit-cloudflare-starter
+      text: 📖 Dokumentasi
+      link: /guide/
 
 features:
-  - icon: 🔐
-    title: Auth Lengkap
-    details: Email/password + Google OAuth + email verification + password reset. Session-based dengan HTTP-only cookies.
-  - icon: 🗄️
-    title: Database Edge
-    details: Cloudflare D1 SQLite built-in. Drizzle ORM + Kysely query builder. Type-safe, zero config.
-  - icon: 📤
-    title: File Upload
-    details: S3-compatible storage (R2, Wasabi, S3). Avatar dengan auto WebP. Presigned URL untuk large files.
-  - icon: 🌍
-    title: Edge Deploy
-    details: Deploy ke 300+ lokasi Cloudflare. Sub-100ms latency. Auto-scaling, zero maintenance.
+  - icon: 🤖
+    title: 5 AI Agents
+    details: Product → Tech Lead → Developer → QA → DevOps. Beri instruksi, agents kerja otomatis. State tracking included.
   - icon: ⚡
+    title: Development 10x Lebih Cepat
+    details: Dari ide ke production dalam 1 hari. Bukan 1 bulan. Agents handle semua dari spec sampai deploy.
+  - icon: 🔐
+    title: Production Ready
+    details: Auth, database, file upload, email — semua built-in. Deploy ke 300+ edge locations. Auto-scaling.
+  - icon: 🗄️
     title: Modern Stack
-    details: Svelte 5 Runes + Tailwind CSS 4 + Drizzle ORM 0.40. Production-ready.
+    details: Svelte 5 + Cloudflare D1 + Drizzle ORM. Type-safe, zero config, edge-native.
   - icon: 💰
     title: 100% Gratis
-    details: Free tier sangat besar. Unlimited requests, 500k queries/hari, 10GB storage.
+    details: Free tier sangat besar. Unlimited requests, 500k queries/hari, 10GB storage. Cocok untuk MVP.
+  - icon: 🌍
+    title: Deploy Sekali Klik
+    details: npm run deploy — langsung live. D1 binding & env vars otomatis via CLI. No dashboard clicking.
 ---
 
-## 🪁 Apa itu LayangKit?
+## 🤖 Apa itu LayangKit?
 
-**LayangKit** adalah starter template full-stack modern untuk membangun aplikasi web dengan cepat. Dari zero ke production dalam 5 menit — 100% gratis.
+**LayangKit** adalah starter template **AI-Native** — built khusus untuk development dengan AI Agents.
 
-::: tip 💡 Cocok Untuk
-- **Founder/Indie Hacker** — Validasi ide cepat tanpa setup ribet
-- **Frontend Developer** — Butuh backend dengan auth & database siap pakai
-- **Full-stack Developer** — Stack modern yang proven di production
-- **AI-Native Developer** — Optimized untuk AI Agent workflow
-:::
+Bukan cuma boilerplate code. Tapi **workflow lengkap** dengan 5 AI Agents yang bekerja secara otomatis dari ide sampai deploy.
 
-### Masalah yang Diselesaikan
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  YOUR IDEA                                                      │
+│     ↓                                                           │
+│  "@workflow/agents/product.md Saya mau app untuk..."           │
+│     ↓                                                           │
+│  🤖 Product Agent        → PRD, User Stories, Roadmap          │
+│  🤖 Tech Lead Agent      → Tech Spec, Database Design          │
+│  🤖 Developer Agent      → Working Code                        │
+│  🤖 QA Agent             → Test Report                         │
+│  🤖 DevOps Agent         → Deploy + State Tracking             │
+│     ↓                                                           │
+│  🎉 PRODUCTION APP LIVE                                        │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-| Tanpa LayangKit | Dengan LayangKit |
-|-----------------|------------------|
-| Setup auth: berjam-jam | Auth siap pakai: 5 menit |
-| Konfigurasi database ribet | D1 zero-config, langsung coding |
-| Deploy rumit (Docker, VPS) | `npm run deploy`, selesai |
-| Coba-coba stack | Stack sudah proven, langsung produksi |
+---
+
+## 🚀 2 Cara Pakai
+
+### Cara 1: AI Agent Workflow (Rekomendasi)
+
+Development otomatis dengan 5 agents. Cukup beri instruksi.
+
+```bash
+# 1. Install
+npm create layang my-app
+cd my-app
+
+# 2. Panggil AI Agents
+@workflow/agents/product.md "Saya mau bikin app todo list"
+# [Review output]
+
+@workflow/agents/tech-lead.md "Lanjutkan dari Product Agent"
+# [Review output]
+
+@workflow/agents/developer.md "Implement semua fitur"
+# [Review code]
+
+@workflow/agents/qa.md "Test aplikasi"
+# [Review test report]
+
+@workflow/agents/devops.md "Deploy ke production"
+# 🎉 App live!
+```
+
+**Keuntungan:**
+- ✅ Development 10x lebih cepat
+- ✅ Dokumentasi lengkap otomatis
+- ✅ Trackable progress
+- ✅ Bisa intervensi kapan saja
+
+---
+
+### Cara 2: Manual Development
+
+Pakai sebagai starter template biasa. Coding manual.
+
+```bash
+# 1. Install
+npm create layang my-app
+cd my-app
+
+# 2. Setup database
+npx wrangler d1 create my-app-db
+# Copy database_id ke wrangler.toml
+
+# 3. Dev
+npm run db:migrate:local
+npm run dev
+
+# 4. Build & Deploy
+npm run build
+npm run deploy
+```
+
+**Keuntungan:**
+- ✅ Full control
+- ✅ Cocok untuk yang suka coding manual
+- ✅ Auth & database sudah siap
+
+---
+
+## 🤖 AI Agent Workflow Detail
+
+### 5 Agents Bekerja Berurutan
+
+| Agent | Input | Output | Waktu |
+|-------|-------|--------|-------|
+| **Product** | Ide kamu | PRD, User Stories, Roadmap | 5-10 min |
+| **Tech Lead** | PRD | Tech Spec, Database Schema | 5-10 min |
+| **Developer** | Tech Spec | Working code di `src/` | 10-30 min |
+| **QA** | Code | Test Report | 5-10 min |
+| **DevOps** | Approved code | Live app + State tracking | 2-5 min |
+
+### State Tracking (New 🎉)
+
+DevOps Agent menyimpan deployment state:
+
+```markdown
+workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md
+
+| Status | COMPLETED |
+| Type | FIRST_DEPLOY |
+| Config | Database ✅, Storage ✅, Email ❌ |
+```
+
+Bisa resume deployment yang ter-interrupt!
 
 ---
 
@@ -66,6 +161,11 @@ features:
 
 ```
 ┌────────────────────────────────────────────────────────────┐
+│  AI Workflow Layer                                         │
+│  ├── 5 Specialized Agents                                  │
+│  ├── State Tracking                                        │
+│  └── Output Documentation                                  │
+├────────────────────────────────────────────────────────────┤
 │  Frontend                                                  │
 │  ├── SvelteKit 2.x    → Full-stack framework              │
 │  ├── Svelte 5         → UI dengan Runes ($state)           │
@@ -78,30 +178,10 @@ features:
 ├────────────────────────────────────────────────────────────┤
 │  Services                                                  │
 │  ├── Cloudflare Pages → Edge deployment                    │
-│  ├── Cloudflare R2    → File storage                       │
+│  ├── S3 Storage       → R2, Wasabi, S3, MinIO             │
 │  └── Resend           → Email delivery                     │
 └────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 🚀 Quick Start
-
-```bash
-# 1. Create project
-npm create layang@latest my-app
-cd my-app
-
-# 2. Setup database
-npx wrangler d1 create my-app-db
-# Copy database_id ke wrangler.toml
-
-# 3. Run
-npm run db:migrate:local
-npm run dev
-```
-
-🎉 **Buka http://localhost:5173** — Auth, database, semua berfungsi!
 
 ---
 
@@ -111,45 +191,33 @@ npm run dev
 | Dokumen | Deskripsi | Waktu |
 |---------|-----------|-------|
 | [Quick Start](./guide/quick-start) | Setup minimal, langsung jalan | 5 min |
-| [Getting Started](./guide/getting-started) | Setup lengkap dengan penjelasan | 15 min |
-| [Development Flow](./guide/development-flow) | Workflow development | 10 min |
+| [AI Workflow](./guide/ai-first-development) | Development dengan 5 AI Agents | 10 min |
+| [Workflow Setup](./guide/workflow-setup) | Cara pakai agents | 10 min |
 
 ### 🤖 AI Agent Workflow
 | Dokumen | Deskripsi |
 |---------|-----------|
 | [AI Workflow Overview](./guide/ai-first-development) | 5 Agents: Product → Tech Lead → Dev → QA → DevOps |
-| [Workflow Setup](./guide/workflow-setup) | Setup workflow di project |
+| [Workflow Setup](./guide/workflow-setup) | Setup & contoh penggunaan |
+| [Product Agent](./guide/ai-first-development#step-1-product-agent-pa) | Define requirements |
+| [Tech Lead Agent](./guide/ai-first-development#step-2-tech-lead-agent-tla) | Design technical |
+| [Developer Agent](./guide/ai-first-development#step-3-developer-agent-deva) | Implement code |
+| [QA Agent](./guide/ai-first-development#step-4-qa-agent-qaa) | Test & report |
+| [DevOps Agent](./guide/ai-first-development#step-5-devops-agent-doa) | Deploy & track |
 
 ### 🏗️ Arsitektur & Pola
 | Dokumen | Deskripsi |
 |---------|-----------|
 | [Architecture](./guide/architecture) | System design & patterns |
 | [Project Structure](./guide/project-structure) | Struktur folder |
-| [SvelteKit Patterns](./guide/sveltekit-patterns) | Load, Actions, API |
 | [Database Guide](./guide/database-d1) | D1 + Drizzle + Kysely |
 
 ### ⚙️ Konfigurasi
 | Dokumen | Deskripsi |
 |---------|-----------|
 | [Environment Variables](./guide/environment-variables) | Semua env vars |
-| [Google OAuth](./guide/google-oauth) | Setup login Google |
-| [Resend Email](./guide/resend-email) | Setup email verification |
-| [S3 Storage](./guide/cloudflare-r2) | Setup file upload (R2, Wasabi, dll) |
-
-### 📖 Fitur Detail
-| Dokumen | Deskripsi |
-|---------|-----------|
-| [Authentication](./guide/authentication) | Auth system deep dive |
-| [File Uploads](./guide/file-uploads) | Upload & S3 storage |
-| [Profile Management](./guide/profile-management) | User profile |
-
-### 🐛 Troubleshooting
-| Dokumen | Isu |
-|---------|-----|
-| [Database](./troubleshooting/database) | Migration, query errors |
-| [Authentication](./troubleshooting/authentication) | Login, session errors |
-| [Deployment](./troubleshooting/deployment) | Build, deploy errors |
-| [Upload](./troubleshooting/upload) | File upload errors |
+| [S3 Storage](./guide/cloudflare-r2) | Setup file upload |
+| [Deployment](./guide/deployment) | Deploy otomatis vs manual |
 
 ---
 
@@ -159,11 +227,20 @@ npm run dev
 |---------|-----------|---------------|
 | **Cloudflare Pages** | Unlimited requests, 500 builds/bulan | Website unlimited traffic |
 | **Cloudflare D1** | 500k rows/query/hari, 5 GB | Database aplikasi kecil-menengah |
-| **Cloudflare R2** | 10 GB storage, 1M ops/bulan | File storage |
+| **S3 Storage** | 10 GB (R2), atau sesuai provider | File storage |
 | **Workers** | 100k requests/hari | API calls |
 | **Resend** | 100 email/hari | Email verification |
 
 > **Bottom line:** Untuk startup, portfolio, side project — ini **GRATIS TOTAL** dengan limit yang sangat longgar.
+
+---
+
+## 🎯 Cocok Untuk
+
+- **Founder/Indie Hacker** — Validasi ide cepat dengan AI agents
+- **Frontend Developer** — Butuh backend siap pakai + AI workflow
+- **Full-stack Developer** — Stack modern dengan development otomatis
+- **AI-Native Developer** — Optimized untuk AI agent workflow
 
 ---
 
@@ -173,10 +250,9 @@ npm run dev
 - [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
 - [Drizzle ORM](https://orm.drizzle.team/docs)
 - [Cloudflare D1](https://developers.cloudflare.com/d1/)
-- [Tailwind CSS v4](https://tailwindcss.com/docs/v4-beta)
 
 ---
 
-**Dari zero ke production dalam 5 menit — 100% gratis, 300+ edge locations** 🚀
+**Dari ide ke production dalam 1 hari — dengan bantuan 5 AI Agents** 🚀🤖
 
-[Mulai Sekarang →](./guide/quick-start)
+[Mulai dengan AI Workflow →](./guide/ai-first-development)
