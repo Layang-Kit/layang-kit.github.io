@@ -17,14 +17,14 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: 'Start Here',
+          text: 'Getting Started',
           items: [
             { text: 'Quick Start', link: '/guide/quick-start' },
             { text: 'Deployment', link: '/guide/deployment' },
           ]
         },
         {
-          text: 'AI Workflow',
+          text: 'AI Agents',
           collapsed: true,
           items: [
             { text: 'Overview', link: '/guide/ai-first-development' },
@@ -35,7 +35,7 @@ export default defineConfig({
           text: 'Configuration',
           collapsed: true,
           items: [
-            { text: 'Environment Variables', link: '/guide/environment-variables' },
+            { text: 'Environment', link: '/guide/environment-variables' },
             { text: 'Database', link: '/guide/database-d1' },
             { text: 'Authentication', link: '/guide/authentication' },
             { text: 'File Upload', link: '/guide/file-uploads' },
@@ -46,26 +46,18 @@ export default defineConfig({
           collapsed: true,
           items: [
             { text: 'Google OAuth', link: '/guide/google-oauth' },
-            { text: 'Email (Resend)', link: '/guide/resend-email' },
+            { text: 'Email', link: '/guide/resend-email' },
             { text: 'S3 Storage', link: '/guide/cloudflare-r2' },
           ]
         },
-      ],
-      '/reference/': [
-        {
-          text: 'Reference',
-          items: [
-            { text: 'Glossary', link: '/reference/glossary' },
-          ]
-        }
       ],
       '/troubleshooting/': [
         {
           text: 'Troubleshooting',
           items: [
             { text: 'Database', link: '/troubleshooting/database' },
-            { text: 'Authentication', link: '/troubleshooting/authentication' },
-            { text: 'Deployment', link: '/troubleshooting/deployment' },
+            { text: 'Auth', link: '/troubleshooting/authentication' },
+            { text: 'Deploy', link: '/troubleshooting/deployment' },
           ]
         }
       ]
@@ -76,7 +68,7 @@ export default defineConfig({
     ],
     
     footer: {
-      message: 'LayangKit - AI-Native Starter',
+      message: 'LayangKit',
       copyright: 'Copyright 2026'
     },
     
