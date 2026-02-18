@@ -2,6 +2,12 @@
 
 Development dengan AI Agents — dari ide sampai deploy, otomatis.
 
+::: tip New 🎉
+DevOps Agent sekarang dengan **state tracking**! Deployment status tersimpan otomatis.
+:::
+
+---
+
 ## Overview
 
 Workflow terdiri dari **5 Agents** yang bekerja secara berurutan:
@@ -16,15 +22,19 @@ Product Agent → Tech Lead Agent → Developer Agent → QA Agent → DevOps Ag
 
 Setiap agent **WAJIB** menunggu approve dari Anda sebelum lanjut.
 
+---
+
 ## Agents
 
 | Agent | File | Tugas | Output |
 |-------|------|-------|--------|
 | **Product Agent** | `product.md` | Definisi kebutuhan | PRD, User Stories, Roadmap |
-| **Tech Lead Agent** | `tech-lead.md` | Desain teknis | Tech Spec, Architecture, Routes, Tasks |
-| **Developer Agent** | `developer.md` | Implementasi kode | Working code |
+| **Tech Lead Agent** | `tech-lead.md` | Desain teknis | Tech Spec, Architecture, Tasks |
+| **Developer Agent** | `developer.md` | Implementasi kode | Working code in `src/` |
 | **QA Agent** | `qa.md` | Testing | Test report |
-| **DevOps Agent** | `devops.md` | Deployment | Live app |
+| **DevOps Agent** | `devops.md` | Deployment | Live app + State tracking |
+
+---
 
 ## Cara Penggunaan
 
@@ -44,6 +54,8 @@ Fitur: create todo, set deadline, mark complete, filter by status.
 User: personal use, single user.
 Timeline: MVP 1 minggu.
 ```
+
+---
 
 ## Workflow Step-by-Step
 
@@ -117,7 +129,7 @@ Spec ada di workflow/outputs/02-engineering/
 
 **DevA akan:**
 1. Baca Tech Spec dan Tasks
-2. Implement kode
+2. Implement kode di `src/`
 3. Present hasil
 4. Tunggu **REVIEW & APPROVE**
 
@@ -162,16 +174,24 @@ Deploy ke production.
 ```
 
 **DOA akan:**
-1. Build application
-2. Deploy ke Cloudflare
-3. Verify deployment
-4. Inform deployment complete
+1. Check deployment state (baca `DEPLOYMENT_CONFIG.md`)
+2. Determine: First Deploy atau Update?
+3. Build application
+4. Deploy ke Cloudflare (otomatis via CLI)
+5. Configure D1 binding (via CLI)
+6. Set environment variables (via CLI)
+7. Apply database migrations
+8. Verify deployment
+9. **Update state file**
+10. Inform deployment complete
 
 **Output:**
 - Live app di Cloudflare Pages
-- `workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md`
+- `workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md` (auto-updated)
 
 **🎉 DONE!**
+
+---
 
 ## Contoh End-to-End
 
@@ -247,28 +267,37 @@ Deploy ke production.
 
 **🎉 Aplikasi live!**
 
-## Setup Workflow di Project
+---
 
-Workflow sudah included di project. Struktur:
+## State Tracking (New 🎉)
+
+DevOps Agent sekarang melacak deployment state:
 
 ```
-workflow/
-├── README.md              # Overview workflow
-├── examples.md            # Contoh penggunaan
-├── quick-reference.md     # Cheat sheet
-├── agents/
-│   ├── product.md         # Product Agent
-│   ├── tech-lead.md       # Tech Lead Agent
-│   ├── developer.md       # Developer Agent
-│   ├── qa.md              # QA Agent
-│   └── devops.md          # DevOps Agent
-└── outputs/               # Hasil kerja agents
-    ├── 01-product/
-    ├── 02-engineering/
-    ├── 03-tasks/
-    ├── 04-reports/
-    └── 05-deployment/
+workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md
 ```
+
+### Contoh State
+
+```markdown
+| Field | Value |
+|-------|-------|
+| **Status** | `COMPLETED` |
+| **Type** | `FIRST_DEPLOY` |
+
+## Configuration State
+- [x] Database created
+- [x] Binding configured
+- [x] Migrations applied
+- [ ] Email configured (optional)
+```
+
+### Keuntungan
+- Tracking deployment history
+- Resume deployment yang ter-interrupt
+- Checklist konfigurasi
+
+---
 
 ## Tips
 
@@ -276,16 +305,12 @@ workflow/
 2. **Berikan feedback spesifik** — "Tambahkan fitur X" atau "Kurangi Y"
 3. **Bisa skip agent** — Jika sudah punya PRD, langsung ke TLA
 4. **Iterasi** — Bisa bolak-balik antar agent jika perlu revisi
-
-## Workflow Files
-
-| File | Isi |
-|------|-----|
-| `workflow/README.md` | Overview workflow |
-| `workflow/examples.md` | Contoh skenario lengkap |
-| `workflow/quick-reference.md` | Cheat sheet singkat |
-| `workflow/agents/*.md` | Instruksi untuk setiap agent |
+5. **Commit output** — Output agents bisa di-commit ke git
 
 ---
 
-**Mulai dengan:** `@workflow/agents/product.md [deskripsi aplikasi]`
+## Mulai Sekarang
+
+```
+@workflow/agents/product.md [deskripsi aplikasi]
+```

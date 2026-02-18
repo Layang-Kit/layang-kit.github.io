@@ -1,12 +1,16 @@
 # Workflow Setup
 
-Setup AI Agent Workflow untuk development otomatis.
+Setup dan penggunaan AI Agent Workflow untuk development otomatis.
+
+---
 
 ## Prerequisites
 
-Workflow sudah **built-in** di LayangKit. Tidak perlu setup manual.
+::: tip Sudah Built-in
+Workflow sudah **built-in** di LayangKit. Tidak perlu setup manual!
+:::
 
-Struktur sudah tersedia di folder `workflow/`:
+Struktur tersedia di folder `workflow/`:
 
 ```
 workflow/
@@ -27,6 +31,8 @@ workflow/
     └── 05-deployment/
 ```
 
+---
+
 ## Cara Pakai
 
 ### 1. Panggil Agent
@@ -43,7 +49,7 @@ Contoh:
 
 ### 2. Review Output
 
-Setiap agent akan menyimpan output di `workflow/outputs/`:
+Setiap agent menyimpan output di `workflow/outputs/`:
 
 | Agent | Output Folder |
 |-------|---------------|
@@ -59,9 +65,11 @@ Setelah review, berikan instruksi:
 - **"Approve"** atau **"Lanjutkan"** → Agent lanjut ke tahap berikutnya
 - **"Revisi: [detail]"** → Agent memperbaiki
 
+---
+
 ## Contoh Penggunaan
 
-### Development Fitur Baru
+### Development Fitur Baru (Full Workflow)
 
 ```bash
 # Step 1: Define requirements
@@ -88,7 +96,7 @@ Setelah review, berikan instruksi:
 @workflow/agents/devops.md Deploy ke production.
 ```
 
-### Fix Bug
+### Fix Bug (Skip beberapa agent)
 
 ```bash
 # Langsung ke Developer Agent
@@ -100,6 +108,27 @@ Setelah review, berikan instruksi:
 # Deploy jika perlu
 @workflow/agents/devops.md Deploy hotfix.
 ```
+
+### Update Schema (Dari Tech Lead)
+
+```bash
+# Mulai dari Tech Lead (skip Product)
+@workflow/agents/tech-lead.md
+
+Tambahkan tabel "comments" dengan relasi ke posts.
+Buatkan spec lengkap.
+
+# Lanjut ke Developer
+@workflow/agents/developer.md Implement schema comments.
+
+# Test
+@workflow/agents/qa.md Test fitur comments.
+
+# Deploy
+@workflow/agents/devops.md Deploy.
+```
+
+---
 
 ## Output Structure
 
@@ -132,11 +161,19 @@ workflow/outputs/04-reports/
 └── TEST_REPORT.md      # QA test results
 ```
 
-### 05-deployment/
+### 05-deployment/ (New 🎉)
 ```
 workflow/outputs/05-deployment/
-└── DEPLOYMENT_CONFIG.md # Deployment info
+└── DEPLOYMENT_CONFIG.md # Deployment state tracking
 ```
+
+**DEPLOYMENT_CONFIG.md** berisi:
+- Deployment status (PENDING/IN_PROGRESS/COMPLETED)
+- Deployment type (FIRST_DEPLOY/UPDATE)
+- Configuration checklist
+- Deployment history
+
+---
 
 ## Best Practices
 
@@ -170,6 +207,18 @@ Saya sudah punya PRD di docs/PRD.md.
 Buatkan technical design.
 ```
 
+### 5. Reset State Jika Perlu
+Jika ingin deploy ulang atau ada masalah:
+
+```bash
+# Reset deployment state
+rm workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md
+cp workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md.example \
+   workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md
+```
+
+---
+
 ## Troubleshooting
 
 ### Agent tidak mengerti instruksi
@@ -180,16 +229,34 @@ Buatkan technical design.
 - Berikan feedback detail apa yang perlu diubah
 - Bisa ulang tahap tersebut
 
+### Deployment failed
+- Check state: `cat workflow/outputs/05-deployment/DEPLOYMENT_CONFIG.md`
+- Re-run DevOps Agent: `@workflow/agents/devops.md Retry deploy`
+
 ### Workflow file hilang
 Workflow sudah included di starter. Jika hilang:
 ```bash
 # Copy dari repo
-curl -L https://github.com/maulanashalihin/svelte-kit-cloudflare-starter/raw/main/workflow/agents/product.md > workflow/agents/product.md
+git checkout HEAD -- workflow/
 ```
 
 ---
 
-**Workflow siap digunakan!** Mulai dengan:
+## Command Reference
+
+| Command | Fungsi |
+|---------|--------|
+| `@workflow/agents/product.md [desc]` | Define requirements |
+| `@workflow/agents/tech-lead.md` | Design technical |
+| `@workflow/agents/developer.md [task]` | Implement code |
+| `@workflow/agents/qa.md` | Test application |
+| `@workflow/agents/devops.md` | Deploy to production |
+
+---
+
+**Workflow siap digunakan!** 🚀
+
+Mulai dengan:
 ```
 @workflow/agents/product.md [deskripsi aplikasi]
 ```
