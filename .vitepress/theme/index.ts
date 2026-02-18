@@ -12,10 +12,6 @@ export default {
     })
   },
   enhanceApp({ app, router, siteData }) {
-    // Force dark mode
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.add('dark')
-      document.documentElement.style.colorScheme = 'dark'
-    }
+    // Theme follows user preference (light/dark)
   }
 } satisfies Theme

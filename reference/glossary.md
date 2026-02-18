@@ -73,8 +73,8 @@ export const load = async ({ locals }) => {
 };
 ```
 
-### Lucia Auth
-Session-based authentication library. Di LayangKit, menggunakan custom implementation dengan pattern serupa.
+### Custom Session Auth
+Session-based authentication implementation menggunakan Web Crypto API. Session disimpan di database (D1) dengan cookie HTTP-only.
 
 ## P
 

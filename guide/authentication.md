@@ -110,7 +110,7 @@ Jika Anda sudah punya account dengan email yang sama:
 src/
 ├── lib/
 │   └── auth/
-│       ├── lucia.ts          # Session management
+│       ├── session.ts        # Session management (custom)
 │       ├── google.ts         # Google OAuth
 │       └── password.ts       # Password hashing
 └── routes/

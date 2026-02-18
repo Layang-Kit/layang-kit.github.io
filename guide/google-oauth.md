@@ -203,7 +203,7 @@ Setiap environment punya Client ID dan Secret yang berbeda.
 
 - [Google OAuth 2.0 Documentation](https://developers.google.com/identity/protocols/oauth2)
 - [Google Identity Services](https://developers.google.com/identity/gsi/web)
-- [Lucia Auth with OAuth](https://lucia-auth.com/guides/oauth/)
+- [Arctic OAuth Library](https://arcticjs.dev/)
 
 ---
 

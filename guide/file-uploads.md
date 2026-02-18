@@ -202,11 +202,18 @@ src/
 │   └── storage/
 │       └── s3.ts            # S3-compatible storage
 └── routes/
-    └── api/
+    ├── (dashboard)/
+    │   └── profile/
+    │       ├── +page.svelte       # Uses /api/upload/image for avatar
+    │       ├── +page.server.ts
+    │       └── +server.ts
+    └── api/                       # Shared upload service
         └── upload/
-            ├── image/+server.ts     # Image upload
+            ├── image/+server.ts     # Image upload (used by profile, etc)
             └── presign/+server.ts   # Presigned URL
 ```
+
+**Catatan:** `/api/upload/*` adalah **shared API service** yang dipakai oleh berbagai fitur (profile, posts, dll). File upload tidak menggunakan unified pattern karena merupakan layanan shared.
 
 ---
 

@@ -11,7 +11,7 @@ Dokumen ini mencatat keputusan arsitektural penting yang dibuat dalam project in
 **Context:** Butuh sistem autentikasi yang aman dan bisa di-revoke
 
 ### Decision
-Menggunakan **Session-Based Authentication** dengan Lucia Auth, bukan JWT.
+Menggunakan **Session-Based Authentication** dengan custom implementation (Web Crypto API + D1), bukan JWT.
 
 ### Alasan
 

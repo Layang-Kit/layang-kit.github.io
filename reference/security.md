@@ -10,19 +10,22 @@ Panduan mengamankan aplikasi SvelteKit Cloudflare untuk production.
 
 **Yang sudah diimplementasi:**
 ```typescript
-// src/lib/auth/lucia.ts
-export const createLucia = (adapter: any) => {
-  return new Lucia(adapter, {
-    sessionCookie: {
-      attributes: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS only
-        sameSite: 'strict', // CSRF protection
-        httpOnly: true, // No JavaScript access
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      }
-    }
-  });
+// src/lib/auth/session.ts
+const COOKIE_ATTRIBUTES = {
+  httpOnly: true,     // No JavaScript access
+  secure: !dev,        // HTTPS only in production
+  sameSite: 'lax' as const,  // CSRF protection
+  path: '/',
+  maxAge: 60 * 60 * 24 * 30 // 30 days
 };
+
+export function createSessionCookie(sessionId: string): SessionCookie {
+  return {
+    name: 'auth_session',
+    value: sessionId,
+    attributes: COOKIE_ATTRIBUTES
+  };
+}
 ```
 
 **Ceklist:**

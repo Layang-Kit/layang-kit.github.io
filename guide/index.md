@@ -12,6 +12,11 @@ Complete guide for LayangKit.
 - [Overview](/guide/ai-first-development) - 5 AI Agents explained
 - [How to Use](/guide/workflow-setup) - Step by step guide
 
+## Creating Features
+
+- [Guide](/guide/creating-features) - Best practices for new features
+- [First Feature](/guide/first-feature) - Build Todo List step by step
+
 ## Configuration
 
 - [Environment Variables](/guide/environment-variables)

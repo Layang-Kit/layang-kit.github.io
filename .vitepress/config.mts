@@ -11,6 +11,7 @@ export default defineConfig({
     
     nav: [
       { text: 'Guide', link: '/guide/quick-start' },
+      { text: 'Features', link: '/guide/creating-features' },
       { text: 'GitHub', link: 'https://github.com/Layang-Kit/layang-app' }
     ],
 
@@ -20,7 +21,6 @@ export default defineConfig({
           text: 'Getting Started',
           items: [
             { text: 'Quick Start', link: '/guide/quick-start' },
-            { text: 'Deployment', link: '/guide/deployment' },
           ]
         },
         {
@@ -29,6 +29,14 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/guide/ai-first-development' },
             { text: 'How to Use', link: '/guide/workflow-setup' },
+          ]
+        },
+        {
+          text: 'Creating Features',
+          collapsed: true,
+          items: [
+            { text: 'Guide', link: '/guide/creating-features' },
+            { text: 'First Feature: Todo List', link: '/guide/first-feature' },
           ]
         },
         {
@@ -48,6 +56,13 @@ export default defineConfig({
             { text: 'Google OAuth', link: '/guide/google-oauth' },
             { text: 'Email', link: '/guide/resend-email' },
             { text: 'S3 Storage', link: '/guide/cloudflare-r2' },
+          ]
+        },
+        {
+          text: 'Deployment',
+          collapsed: false,
+          items: [
+            { text: 'Deploy to Production', link: '/guide/deployment' },
           ]
         },
       ],

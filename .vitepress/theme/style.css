@@ -173,7 +173,6 @@ html.dark {
     var(--sk-rose-500) 50%
   );
   --vp-home-hero-image-filter: blur(60px);
-  opacity: 0.6;
 }
 
 @media (min-width: 640px) {

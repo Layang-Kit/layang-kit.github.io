@@ -175,6 +175,34 @@ workflow/outputs/05-deployment/
 
 ---
 
+## DevOps Agent
+
+Agent otomatis untuk deployment ke Cloudflare Pages.
+
+### Penggunaan
+
+```
+@workflow/agents/devops.md Deploy aplikasi ke production
+```
+
+### Fitur
+
+- **Auto-detect**: First deploy vs update deployment
+- **State tracking**: Status tersimpan di `DEPLOYMENT_CONFIG.md`
+- **Auto-configure**: Setup D1 binding, secrets, migrations
+- **Zero manual**: Tidak perlu buka dashboard Cloudflare
+
+### Command
+
+| Instruksi | Fungsi |
+|-----------|--------|
+| `Deploy ke production` | First deploy atau update |
+| `Setup deployment` | Configure environment |
+| `Status deployment` | Check deployment state |
+| `Retry deploy` | Deploy ulang jika failed |
+
+---
+
 ## Best Practices
 
 ### 1. Review Setiap Output
