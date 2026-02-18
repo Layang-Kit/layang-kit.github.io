@@ -1,49 +1,84 @@
 # Environment Variables - Konfigurasi Lengkap
 
-Panduan lengkap mengisi file `.env` untuk semua layanan.
+Panduan lengkap konfigurasi untuk LayangKit.
 
-## 📋 File .env.example
+::: tip Perubahan Baru 🎉
+Setup sudah **disederhanakan**! Tidak perlu `CLOUDFLARE_*` API token lagi - cukup `wrangler login`.
+:::
 
-Project ini sudah include `.env.example` dengan semua variabel yang dibutuhkan.
+---
 
+## 📋 Dua File Konfigurasi
+
+| File | Isi | Wajib? |
+|------|-----|--------|
+| `wrangler.toml` | Bindings database & storage | **YA** |
+| `.env` | Secrets untuk external services | Opsional |
+
+---
+
+## 🔧 wrangler.toml (WAJIB)
+
+File ini berisi **bindings** yang menghubungkan aplikasi dengan resources Cloudflare.
+
+```toml
+name = "my-app"
+compatibility_date = "2024-09-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "my-database"
+database_id = "your-database-id-here"  # ← GANTI INI!
+
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "my-bucket"  # Opsional, untuk file upload
+```
+
+**Cara setup:**
 ```bash
-# Copy template
-cp .env.example .env
+# 1. Login
+npx wrangler login
 
-# Edit file
-nano .env  # atau code .env, vim .env, dll
+# 2. Create database
+npx wrangler d1 create my-database
+
+# 3. Copy database_id ke wrangler.toml
 ```
 
 ---
 
-## 🔴 WAJIB (Minimal Setup)
+## 📝 .env (OPSIONAL)
 
-### Cloudflare D1 Database
+File ini berisi **credentials** untuk external services. **Tidak wajib** untuk development dasar.
 
-| Variable | Dari Mana | Contoh |
-|----------|-----------|--------|
-| `CLOUDFLARE_ACCOUNT_ID` | Dashboard kanan atas / Workers & Pages | `1a2b3c4d5e6f7g8h9i0j` |
-| `CLOUDFLARE_DATABASE_ID` | `wrangler d1 create` output / wrangler.toml | `abc123def-456...` |
-| `CLOUDFLARE_API_TOKEN` | Profile → API Tokens → Create | `abcd1234...` |
+### 1. Copy Template
 
-#### Cara Mendapatkan:
+```bash
+cp .env.example .env
+```
 
-**Account ID:**
-1. Dashboard Cloudflare → Lihat sidebar kanan
-2. Atau Workers & Pages → Account ID di panel kanan
+### 2. Isi Sesuai Kebutuhan
 
-**Database ID:**
-1. Setelah `npx wrangler d1 create DB`, copy ID
-2. Atau lihat di `wrangler.toml`
+| Fitur | Variables | Setup Guide |
+|-------|-----------|-------------|
+| **Google Login** | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | [Google OAuth](./google-oauth) |
+| **Email** | `RESEND_API_TOKEN`, `FROM_EMAIL` | [Resend Email](./resend-email) |
+| **File Upload** | `S3_*` | [S3 Storage](./cloudflare-r2) |
 
-**API Token:**
-1. Dashboard → My Profile (kanan atas) → API Tokens
-2. Create Token → Custom token
-3. Permissions:
-   - Account: D1:Edit
-   - Zone: Read (opsional)
-4. Continue → Create
-5. Copy token (hanya muncul sekali!)
+---
+
+## 🔴 WAJIB (Sebelumnya)
+
+::: danger DIHAPUS
+Variabel berikut **tidak perlu lagi** di `.env`:
+
+- ~~`CLOUDFLARE_ACCOUNT_ID`~~
+- ~~`CLOUDFLARE_DATABASE_ID`~~
+- ~~`CLOUDFLARE_API_TOKEN`~~
+
+Alasan: Kita sekarang pakai `wrangler login` + `wrangler.toml` bindings.
+:::
 
 ---
 
@@ -51,78 +86,63 @@ nano .env  # atau code .env, vim .env, dll
 
 ### Google OAuth (Login dengan Google)
 
-| Variable | Dari Mana |
-|----------|-----------|
-| `GOOGLE_CLIENT_ID` | Google Cloud Console → Credentials |
-| `GOOGLE_CLIENT_SECRET` | Google Cloud Console → Credentials |
-
-**Setup:** [Google OAuth Setup Guide](./google-oauth)
-
 ```env
 GOOGLE_CLIENT_ID=123456789-abc123.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
 ```
 
+**Setup:** [Google OAuth Setup Guide](./google-oauth)
+
 ---
 
 ### Resend Email (Email Verification)
 
-| Variable | Dari Mana |
-|----------|-----------|
-| `RESEND_API_TOKEN` | Resend Dashboard → API Keys |
-| `FROM_EMAIL` | Domain yang diverifikasi di Resend |
-
-**Setup:** [Resend Email Setup](./resend-email)
-
 ```env
 RESEND_API_TOKEN=re_xxxxxxxx
 FROM_EMAIL=noreply@yourdomain.com
+REPLY_TO_EMAIL=support@yourdomain.com
 ```
 
-**Note:** Untuk development bisa pakai `onboarding@resend.dev`
+**Setup:** [Resend Email Setup](./resend-email)
 
 ---
 
-### Cloudflare R2 (File Upload)
+### S3-Compatible Storage (File Upload)
 
-| Variable | Dari Mana |
-|----------|-----------|
-| `R2_ACCOUNT_ID` | Sama dengan Cloudflare Account ID |
-| `R2_ACCESS_KEY_ID` | R2 → Manage R2 API Tokens |
-| `R2_SECRET_ACCESS_KEY` | R2 → Manage R2 API Tokens |
-| `R2_BUCKET_NAME` | Nama bucket yang dibuat |
-| `R2_PUBLIC_URL` | R2 → Bucket → Settings → Public URL |
+::: tip Support Multiple Providers
+- Cloudflare R2 (default)
+- Wasabi
+- AWS S3
+- MinIO
+- DigitalOcean Spaces
+:::
 
-**Setup:** [R2 Setup Guide](./cloudflare-r2)
-
+**Cloudflare R2:**
 ```env
-R2_ACCOUNT_ID=1a2b3c4d5e6f7g8h9i0j
-R2_ACCESS_KEY_ID=abc123...
-R2_SECRET_ACCESS_KEY=xyz789...
-R2_BUCKET_NAME=my-app-uploads
-R2_PUBLIC_URL=https://pub-abc123.r2.dev
+S3_ENDPOINT=https://<account_id>.r2.cloudflarestorage.com
+S3_BUCKET_NAME=my-bucket
+S3_ACCESS_KEY_ID=your_r2_access_key
+S3_SECRET_ACCESS_KEY=your_r2_secret_access_key
+S3_PUBLIC_URL=https://pub-<hash>.r2.dev
 ```
 
----
-
-### Node Environment
-
+**Wasabi:**
 ```env
-NODE_ENV=development  # atau production
+S3_ENDPOINT=https://s3.us-east-1.wasabisys.com
+S3_BUCKET_NAME=my-bucket
+S3_ACCESS_KEY_ID=your_wasabi_key
+S3_SECRET_ACCESS_KEY=your_wasabi_secret
+S3_PUBLIC_URL=https://s3.us-east-1.wasabisys.com/my-bucket
+S3_REGION=us-east-1
 ```
+
+**Setup:** [S3 Storage Setup](./cloudflare-r2)
 
 ---
 
 ## 📝 Contoh .env Lengkap
 
 ```bash
-# ============================================================================
-# REQUIRED - Database (WAJIB)
-# ============================================================================
-CLOUDFLARE_ACCOUNT_ID=1a2b3c4d5e6f7g8h9i0j
-CLOUDFLARE_DATABASE_ID=a1b2c3d4-e5f6-7890-abcd-ef1234567890
-CLOUDFLARE_API_TOKEN=abcd1234xxxxxxxx
-
 # ============================================================================
 # OPTIONAL - Google Login
 # ============================================================================
@@ -134,20 +154,16 @@ GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxx
 # ============================================================================
 RESEND_API_TOKEN=re_xxxxxxxx
 FROM_EMAIL=noreply@yourdomain.com
+REPLY_TO_EMAIL=support@yourdomain.com
 
 # ============================================================================
-# OPTIONAL - File Upload
+# OPTIONAL - File Upload (S3-compatible)
 # ============================================================================
-R2_ACCOUNT_ID=1a2b3c4d5e6f7g8h9i0j
-R2_ACCESS_KEY_ID=abc123...
-R2_SECRET_ACCESS_KEY=xyz789...
-R2_BUCKET_NAME=my-app-uploads
-R2_PUBLIC_URL=https://pub-abc123.r2.dev
-
-# ============================================================================
-# Environment
-# ============================================================================
-NODE_ENV=development
+S3_ENDPOINT=https://<account_id>.r2.cloudfloreststorage.com
+S3_BUCKET_NAME=my-bucket
+S3_ACCESS_KEY_ID=abc123...
+S3_SECRET_ACCESS_KEY=xyz789...
+S3_PUBLIC_URL=https://pub-abc123.r2.dev
 ```
 
 ---
@@ -171,14 +187,20 @@ NODE_ENV=development
 
 ## 🚀 Production Deployment
 
-Untuk production di Cloudflare Pages:
+### Environment Variables di Cloudflare Pages
 
-1. Build project: `npm run build`
-2. Deploy: `npm run deploy`
-3. Dashboard Cloudflare → Pages → Your Project → Settings → Functions
-4. Add Environment Variables disana
+Untuk production, secrets di-set via Dashboard (bukan `.env`):
 
-**Note:** Environment variables di Cloudflare Pages terpisah dari local `.env`
+1. Dashboard → Pages → Your Project → Settings → Functions → Environment Variables
+2. Add variables yang diperlukan
+
+### Bindings di Cloudflare Pages
+
+Bindings (`wrangler.toml`) perlu di-bind manual di Dashboard:
+
+1. Dashboard → Pages → Your Project → Settings → Bindings
+2. D1 Database → Bind dengan nama "DB"
+3. R2 Buckets → Bind dengan nama "STORAGE" (opsional)
 
 ---
 
@@ -186,7 +208,14 @@ Untuk production di Cloudflare Pages:
 
 | Error | Penyebab | Solusi |
 |-------|----------|--------|
-| "D1 binding not found" | Database ID salah | Check `wrangler.toml` dan `.env` |
-| "API token invalid" | Token expired/salah | Buat token baru |
-| "Cannot access R2" | Access key salah | Check R2 API Tokens |
-| "Email not sent" | Resend token salah | Verifikasi token di Resend dashboard |
+| "D1 binding not found" | `database_id` salah | Check `wrangler.toml` |
+| "Storage not configured" | `.env` S3 credentials kosong | Isi `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, dll |
+| "Email not sent" | `RESEND_API_TOKEN` salah | Verifikasi token di Resend dashboard |
+| "Invalid OAuth redirect" | Redirect URI belum didaftarkan | Tambahkan di Google Cloud Console |
+
+---
+
+## 📚 Lanjutan
+
+- [Quick Start](./quick-start) - Setup 5 menit
+- [Deployment](./deployment) - Deploy ke production

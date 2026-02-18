@@ -1,404 +1,201 @@
-# Troubleshooting: Authentication Issues
+# Authentication Issues
 
-Solusi untuk masalah login, register, session, dan OAuth.
+Masalah umum terkait authentication dan solusinya.
 
----
+## "Cannot read properties of undefined (reading 'user')"
 
-## 🔴 Error: "Email atau password salah"
+### Penyebab
+`locals.user` undefined karena session tidak valid.
 
-### Penyebab Umum
+### Solusi
 
-#### 1. Password Salah
-
-**Solusi:**
-- Pastikan Caps Lock tidak aktif
-- Coba reset password
-- Check apakah email terdaftar
-
-#### 2. User Belum Verifikasi Email
-
-**Solusi:**
+Cek auth di `+page.server.ts`:
 ```typescript
-// Check status email
-const user = await locals.db
-  .selectFrom('users')
-  .where('email', '=', email)
-  .selectAll()
-  .executeTakeFirst();
-
-if (user && !user.email_verified) {
-  // Redirect ke halaman verifikasi
-  throw redirect(302, '/verify-email?email=' + email);
-}
-```
-
-**Resend verification:**
-```bash
-# Atau kirim ulang email verifikasi
-# POST /auth/resend-verification
-```
-
-#### 3. User Login dengan Google OAuth Sebelumnya
-
-Jika user pertama kali login dengan Google, kemudian coba login dengan password:
-- User tidak punya password (registered via OAuth)
-- Solusi: Gunakan "Forgot Password" untuk set password
-
----
-
-## 🔴 Error: "Session invalid" atau "Not authenticated"
-
-### Gejala
-User sudah login tapi session tidak terbaca di page lain.
-
-### Penyebab & Solusi
-
-#### 1. Cookie Tidak Ter-set
-
-**Check cookie di browser:**
-- Buka DevTools → Application → Cookies
-- Check ada cookie `auth_session`
-
-**Solusi:**
-```typescript
-// src/lib/auth/lucia.ts
-export const createLucia = (adapter: any) => {
-  return new Lucia(adapter, {
-    sessionCookie: {
-      attributes: {
-        secure: process.env.NODE_ENV === 'production', // HTTPs only di production
-        sameSite: 'strict',
-        httpOnly: true,
-        path: '/' // Pastikan path adalah root
-      }
-    }
-  });
+export const load = async ({ locals }) => {
+  if (!locals.user) {
+    throw redirect(302, '/login');
+  }
+  return { user: locals.user };
 };
 ```
 
-#### 2. Domain Mismatch
+---
 
-Jika menggunakan custom domain:
-```typescript
-// Pastikan cookie domain sesuai
-sessionCookie: {
-  attributes: {
-    domain: '.yourdomain.com' // Share cookie across subdomains
-  }
-}
-```
+## Redirect Tidak Berfungsi
 
-#### 3. Session Expired
+### Penyebab
+Lupa `throw` redirect.
 
-Default session lifetime: 7 hari
+### Solusi
 
 ```typescript
-// Check session expiry
-const session = await lucia.validateSession(sessionId);
+// ❌ Salah
+return redirect(302, '/login');
 
-if (session.session?.fresh) {
-  // Session baru dibuat (extended), update cookie
-}
+// ✅ Benar
+throw redirect(302, '/login');
 ```
 
 ---
 
-## 🔴 Google OAuth Error
+## Session Tidak Persist
 
-### Gejala: "redirect_uri_mismatch"
+### Penyebab
+- Cookie tidak di-set
+- Cookie expired
 
-**Error:**
-```
-Error 400: redirect_uri_mismatch
-The redirect URI in the request does not match the ones authorized
-```
+### Solusi
 
-**Solusi:**
-
-1. Buka [Google Cloud Console](https://console.cloud.google.com)
-2. APIs & Services → Credentials
-3. Edit OAuth 2.0 Client ID
-4. Tambahkan Authorized redirect URIs:
-   ```
-   http://localhost:5173/auth/google/callback    (development)
-   https://your-app.pages.dev/auth/google/callback    (production)
-   https://yourdomain.com/auth/google/callback        (custom domain)
-   ```
-
-### Gejala: "Invalid state parameter"
-
-**Error:**
-```
-Error: Invalid state parameter
-```
-
-**Penyebab:**
-- State cookie expired (10 menit)
-- CSRF attempt
-- Browser blocked third-party cookies
-
-**Solusi:**
+1. Cek hooks.server.ts inject auth:
 ```typescript
-// Pastikan state cookie ter-set
-cookies.set('google_oauth_state', state, {
+const { user, session } = await validateSession(sessionId);
+locals.user = user;
+locals.session = session;
+```
+
+2. Cek cookie config:
+```typescript
+// lib/auth/session.ts
+cookies.set('auth_session', sessionId, {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax', // Gunakan 'lax' untuk OAuth
-  maxAge: 60 * 10 // 10 menit
+  secure: true,
+  sameSite: 'lax',
+  maxAge: 60 * 60 * 24 * 30  // 30 days
 });
 ```
 
-### Gejala: "User denied consent"
+---
 
-User menekan "Cancel" di dialog Google.
+## "Invalid credentials"
 
-**Solusi:**
+### Penyebab
+- Email/password salah
+- User tidak ada
+- Password hash tidak match
+
+### Debug
+
 ```typescript
-// Handle gracefully
-try {
-  // OAuth flow
-} catch (error) {
-  if (error.message?.includes('access_denied')) {
-    throw redirect(302, '/login?error=cancelled');
-  }
-}
+// Log untuk debug (hapus di production)
+console.log('Input password:', password);
+console.log('Stored hash:', user.password_hash);
+
+const valid = await verifyPassword(password, user.password_hash);
+console.log('Valid:', valid);
 ```
 
 ---
 
-## 🔴 Email Verification Tidak Terkirim
+## Google OAuth Error
 
-### Gejala
-User register tapi tidak menerima email verifikasi.
+### "redirect_uri_mismatch"
 
-### Diagnosis
+**Penyebab:** Redirect URI di Google Cloud tidak match.
 
-#### 1. Check Resend API Token
+**Solusi:**
+1. Buka [Google Cloud Console](https://console.cloud.google.com)
+2. APIs & Services > Credentials
+3. Edit OAuth 2.0 Client
+4. Tambahkan Authorized Redirect URI:
+   - `http://localhost:5173/auth/google/callback` (dev)
+   - `https://your-app.pages.dev/auth/google/callback` (prod)
 
-```bash
-# Test Resend API
-curl -X POST https://api.resend.com/emails \
-  -H "Authorization: Bearer re_xxxxxxxx" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "from": "onboarding@yourdomain.com",
-    "to": "test@example.com",
-    "subject": "Test",
-    "html": "<p>Test</p>"
-  }'
-```
+### "invalid_client"
 
-#### 2. Check Environment Variables
+**Penyebab:** `GOOGLE_CLIENT_ID` atau `GOOGLE_CLIENT_SECRET` salah.
 
-```bash
-# .env
-RESEND_API_TOKEN=re_your_token
+**Solusi:**
+1. Cek env vars di `.env`
+2. Cek env vars di Cloudflare Dashboard (production)
+
+---
+
+## Email Verification Tidak Terkirim
+
+### Penyebab
+- Resend belum setup
+- Domain belum verified
+- API token salah
+
+### Solusi
+
+1. Cek Resend dashboard:
+   - Domain verified?
+   - API token aktif?
+
+2. Cek env vars:
+```env
+RESEND_API_TOKEN=re_xxx
 FROM_EMAIL=noreply@yourdomain.com
 ```
 
-**Dashboard Cloudflare Pages:**
-- Pastikan `RESEND_API_TOKEN` di-set di Environment Variables
-
-#### 3. Domain Belum Verified
-
-Resend memerlukan domain verification:
-1. Buka [Resend Dashboard](https://resend.com/domains)
-2. Add domain
-3. Add DNS records sesuai instruksi
-4. Wait untuk verification
-
-#### 4. Email di Spam
-
-**Solusi:**
-- Check folder spam
-- Tambahkan ke whitelist
-- Gunakan DKIM/SPF records
-
----
-
-## 🔴 Password Reset Tidak Bekerja
-
-### Gejala: "Invalid or expired token"
-
-**Penyebab:**
-- Token expired (default: 1 jam)
-- Token sudah digunakan
-- User request token baru (old token invalidated)
-
-**Solusi:**
-```typescript
-// Check token di database
-const tokenRecord = await locals.db
-  .selectFrom('password_reset_tokens')
-  .where('token_hash', '=', hash)
-  .where('expires_at', '>', Date.now())
-  .selectAll()
-  .executeTakeFirst();
-
-if (!tokenRecord || tokenRecord.used) {
-  return fail(400, { error: 'Token invalid atau expired' });
-}
-```
-
-### Flow yang Benar
-
-1. User request reset → Generate token → Send email
-2. User click link (token di URL) → Reset password page
-3. Submit new password → Validate token → Update password
-4. Mark token as used → Invalidate all user sessions
-5. Redirect ke login
-
----
-
-## 🔴 Rate Limiting
-
-### Gejala: Terlalu banyak request error
-
-**Implement rate limiting:**
-```typescript
-// src/lib/rate-limit.ts
-const attempts = new Map<string, number>();
-
-export function rateLimit(key: string, maxAttempts: number = 5): boolean {
-  const current = attempts.get(key) || 0;
-  
-  if (current >= maxAttempts) {
-    return false;
-  }
-  
-  attempts.set(key, current + 1);
-  
-  // Reset setelah 15 menit
-  setTimeout(() => {
-    attempts.delete(key);
-  }, 15 * 60 * 1000);
-  
-  return true;
-}
-
-// Usage
-export const actions = {
-  login: async ({ request, getClientAddress }) => {
-    const ip = getClientAddress();
-    
-    if (!rateLimit(ip, 5)) {
-      return fail(429, { 
-        error: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' 
-      });
-    }
-    
-    // ... login logic
-  }
-};
-```
-
----
-
-## 🔴 Cookie Issues
-
-### Cookie Tidak Ter-set di Production
-
-**Checklist:**
-- [ ] `secure: true` hanya untuk HTTPS
-- [ ] `sameSite` sesuai (strict/lax/none)
-- [ ] Domain match
-- [ ] Path correct (usually '/')
-
-### Clear All Sessions
-
-```typescript
-// Force logout semua devices
-export const actions = {
-  logoutAll: async ({ locals }) => {
-    const userId = locals.user?.id;
-    
-    // Delete all user sessions
-    await locals.db.delete(sessions)
-      .where(eq(sessions.userId, userId));
-    
-    return { success: true };
-  }
-};
-```
-
----
-
-## 🔧 Debug Authentication
-
-### Check Session di DevTools
-
-```javascript
-// Console browser
-document.cookie
-// Output: auth_session=xxx
-```
-
-### Check Server-side
-
+3. Test manual:
 ```typescript
 // +page.server.ts
+import { sendVerificationEmail } from '$lib/email/resend';
+
+// Test send
+await sendVerificationEmail('test@example.com', 'token-xxx');
+```
+
+---
+
+## Password Reset Link Expired
+
+### Penyebab
+- Token expired (default 1 jam)
+- Token sudah digunakan
+
+### Solusi
+
+Generate token baru:
+```typescript
+// Perpanjang expiration
+expiresAt: Date.now() + 1000 * 60 * 60 * 24  // 24 jam
+```
+
+---
+
+## Protected Route Bisa Diakses Tanpa Login
+
+### Penyebab
+Lupa cek auth di `+page.server.ts`.
+
+### Solusi
+
+Buat layout group dengan auth check:
+```typescript
+// (dashboard)/+layout.server.ts
 export const load = async ({ locals }) => {
-  console.log('User:', locals.user);
-  console.log('Session:', locals.session);
-  
-  return {
-    isLoggedIn: !!locals.user,
-    userId: locals.user?.id
-  };
+  if (!locals.user) {
+    throw redirect(302, '/login');
+  }
+  return { user: locals.user };
 };
 ```
 
-### Check Database Sessions
+---
 
-```bash
-# List active sessions
-npx wrangler d1 execute DB --local --command "SELECT * FROM sessions LIMIT 10"
+## User Role Tidak Diterapkan
 
-# Check specific user sessions
-npx wrangler d1 execute DB --local --command "SELECT * FROM sessions WHERE user_id = 'user-id-here'"
+### Solusi
+
+Cek role di load function:
+```typescript
+export const load = async ({ locals }) => {
+  if (!locals.user?.is_admin) {
+    throw redirect(302, '/dashboard');
+  }
+  return {};
+};
 ```
 
 ---
 
-## 🆘 Common Fixes
+## Checklist Auth
 
-### Clear Session Cookie Manual
-
-```javascript
-// Console browser
-document.cookie = 'auth_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-```
-
-### Reset All Sessions (Emergency)
-
-```bash
-# Hapus semua sessions dari database
-npx wrangler d1 execute DB --local --command "DELETE FROM sessions"
-```
-
-### Test Auth Flow Lokal
-
-```bash
-# 1. Register
-curl -X POST http://localhost:5173/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","password":"password123","name":"Test"}'
-
-# 2. Login
-curl -X POST http://localhost:5173/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","password":"password123"}' \
-  -c cookies.txt
-
-# 3. Access protected route
-curl http://localhost:5173/api/profile \
-  -b cookies.txt
-```
-
----
-
-## 📚 Resources
-
-- [Lucia Auth Docs](https://lucia-auth.com/)
-- [Google OAuth Troubleshooting](https://developers.google.com/identity/protocols/oauth2/web-server#troubleshooting)
-- [Resend Documentation](https://resend.com/docs)
+- [ ] Session cookie di-set dengan benar
+- [ ] `hooks.server.ts` inject `locals.user`
+- [ ] Protected routes cek auth di `+page.server.ts`
+- [ ] Google OAuth redirect URI benar
+- [ ] Env vars set di local dan production

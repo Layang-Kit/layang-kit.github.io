@@ -1,6 +1,12 @@
 # File Uploads Guide
 
-Panduan upload file dan gambar di aplikasi.
+Panduan upload file dan gambar dengan S3-compatible storage.
+
+::: tip Update 🎉
+Sekarang support **multiple providers**: R2, Wasabi, AWS S3, MinIO, dll!
+:::
+
+---
 
 ## 📁 Dua Jenis Upload
 
@@ -9,6 +15,8 @@ Panduan upload file dan gambar di aplikasi.
 | **Image** | `/api/upload/image` | Avatar, photos | WebP |
 | **File** | `/api/upload/presign` | PDF, ZIP, DOC | - |
 
+---
+
 ## 🖼️ Image Upload (Avatar)
 
 ### Cara Kerja
@@ -16,7 +24,7 @@ Panduan upload file dan gambar di aplikasi.
 1. User pilih file (JPG, PNG, GIF, WebP)
 2. Server convert ke WebP
 3. Resize jika avatar (256x256)
-4. Upload ke R2
+4. Upload ke S3 storage
 5. Return public URL
 
 ### Upload Avatar
@@ -42,7 +50,7 @@ const res = await fetch('/api/upload/image', {
 });
 
 const { url, size } = await res.json();
-// url: https://pub-xxx.r2.dev/avatars/user-id/timestamp.webp
+// url: https://cdn.example.com/avatars/user-id/timestamp.webp
 ```
 
 ### Image Processing
@@ -68,12 +76,14 @@ const { url, size } = await res.json();
 - ✅ Format: JPG, PNG, GIF, WebP
 - ❌ Tidak accept: SVG, BMP, TIFF
 
+---
+
 ## 📄 File Upload (PDF, ZIP, etc)
 
 ### Cara Kerja (Presigned URL)
 
 1. Minta presigned URL dari server
-2. Upload langsung ke R2 dari browser
+2. Upload langsung ke storage dari browser
 3. Server receive confirmation
 
 ### Via API
@@ -87,14 +97,14 @@ const res = await fetch('/api/upload/presign', {
   body: JSON.stringify({
     filename: 'document.pdf',
     contentType: 'application/pdf',
-    prefix: 'documents' // folder di R2
+    prefix: 'documents' // folder di storage
   })
 });
 
 const { uploadUrl, publicUrl } = await res.json();
 ```
 
-**Step 2: Upload ke R2**
+**Step 2: Upload ke Storage**
 
 ```typescript
 await fetch(uploadUrl, {
@@ -102,7 +112,7 @@ await fetch(uploadUrl, {
   body: file,
   headers: { 'Content-Type': 'application/pdf' }
 });
-// File sekarang di R2!
+// File sekarang di storage!
 ```
 
 ### Allowed File Types
@@ -117,7 +127,9 @@ await fetch(uploadUrl, {
 | Excel | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
 | Word | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` |
 
-## 🗂️ Struktur Folder di R2
+---
+
+## 🗂️ Struktur Folder di Storage
 
 ```
 bucket/
@@ -132,6 +144,8 @@ bucket/
         └── photo.webp
 ```
 
+---
+
 ## 🔒 Security
 
 ### Access Control
@@ -145,17 +159,21 @@ bucket/
 - Type checking via MIME type
 - Extension whitelist
 - Size limit
-- Malware scan (via R2)
+
+---
 
 ## 🐛 Troubleshooting Upload
 
 | Masalah | Solusi |
 |---------|--------|
+| "Storage not configured" | Isi `S3_*` variables di `.env` |
 | "File too large" | Compress file atau resize image |
 | "Invalid file type" | Check allowed types di atas |
-| "Upload failed" | Check R2 credentials di .env |
-| "Image not showing" | Check R2_PUBLIC_URL benar |
+| "Upload failed" | Check S3 credentials di `.env` |
+| "Image not showing" | Check `S3_PUBLIC_URL` benar |
 | "403 Forbidden" | Bucket public access belum enable |
+
+---
 
 ## 💡 Best Practices
 
@@ -172,6 +190,8 @@ bucket/
 2. **Use WebP** jika bisa (smaller size)
 3. **Avatar:** Gunakan square image untuk hasil terbaik
 
+---
+
 ## 📁 Files Terkait
 
 ```
@@ -180,7 +200,7 @@ src/
 │   ├── image/
 │   │   └── convert.ts       # WebP conversion
 │   └── storage/
-│       └── r2.ts            # R2 helpers
+│       └── s3.ts            # S3-compatible storage
 └── routes/
     └── api/
         └── upload/
@@ -188,8 +208,10 @@ src/
             └── presign/+server.ts   # Presigned URL
 ```
 
+---
+
 ## 📖 Lanjutan
 
-- [Setup Cloudflare R2](./cloudflare-r2)
+- [Setup S3 Storage](./cloudflare-r2) - Konfigurasi R2, Wasabi, S3, dll
 - [Profile Management](./profile-management)
 - [Troubleshooting Upload](../troubleshooting/upload)

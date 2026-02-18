@@ -1,194 +1,74 @@
-# 📚 Dokumentasi LayangKit
+# Panduan LayangKit
 
-Selamat datang di dokumentasi LayangKit! 🪁 Dokumentasi ini dirancang untuk membuat development menjadi lebih mudah dan nyaman, baik untuk pemula maupun developer berpengalaman.
+Dokumentasi lengkap untuk membangun aplikasi dengan LayangKit.
 
-> 💰 **100% GRATIS untuk project kecil hingga menengah!** Semua layanan yang digunakan punya free tier yang sangat besar — bisa jalan bertahun-tahun tanpa keluar biaya sepeser pun.
+## 🎯 Pilih Jalurmu
 
----
+::: tip 🏃 Path A: Cepat Saja (15 menit)
+Mau langsung punya aplikasi yang jalan?
 
-## 🎯 Pilih Jalur Belajar
+1. [Quick Start](./quick-start) — 5 menit
+2. [Development Flow](./development-flow) — 10 menit
+3. Deploy! 🚀
+:::
 
-### 👶 Saya Pemula
+::: tip 🤖 Path B: AI-Native Development (Recommended)
+Biarkan AI Agents yang kerja.
 
-Baru belajar web development? Ikuti path ini:
+→ [AI Agent Workflow](./ai-first-development)
+:::
 
-```
-Getting Started (10 menit) 
-    ↓
-Development Flow (20 menit)
-    ↓
-Features (15 menit)
-    ↓
-Deployment (10 menit)
-    ↓
-🎉 Aplikasi Live!
-```
+::: tip 📚 Path C: Pelajari Dulu (1 jam)
+Mau paham setiap komponen?
 
-**Total: ~1 jam untuk aplikasi pertama**
-
----
-
-### 🚀 Saya Sudah Berpengalaman
-
-Sudah familiar dengan web dev? Langsung ke intinya:
-
-```
-Getting Started (10 menit)
-    ↓
-AI-First Development (15 menit) ← Focus here!
-    ↓
-Deployment (10 menit)
-    ↓
-🎉 Build dengan AI!
-```
-
-**Total: ~35 menit untuk productive development**
+1. [Getting Started](./getting-started) — 15 menit
+2. [Architecture](./architecture) — 20 menit
+3. [SvelteKit Patterns](./sveltekit-patterns) — 15 menit
+4. [Database Guide](./database-d1) — 20 menit
+:::
 
 ---
 
-### 🤖 Saya Mau Development dengan AI
+## 📋 Daftar Dokumen
 
-Maximize productivity dengan AI:
+### 🚀 Getting Started
+- [Quick Start](./quick-start) — Setup minimal, langsung coding
+- [Getting Started](./getting-started) — Setup lengkap dengan penjelasan detail
+- [Development Flow](./development-flow) — Workflow development sehari-hari
+- [Features Overview](./features) — Fitur yang sudah built-in
 
-```
-AI-First Development (15 menit) ← Mulai dari sini!
-    ↓
-Getting Started (10 menit)
-    ↓
-Build dengan AI assistance
-    ↓
-🎉 Ship faster!
-```
+### 🤖 AI Agent Workflow
+- [AI Workflow Overview](./ai-first-development) — Overview 5-agent workflow
+- [Workflow Setup](./workflow-setup) — Integrasi workflow ke project
 
----
+### 🏗️ Arsitektur
+- [Architecture Overview](./architecture) — System design & patterns
+- [Project Structure](./project-structure) — Struktur folder dan file
+- [SvelteKit Patterns](./sveltekit-patterns) — Server Load, Form Actions, API
+- [Database Guide](./database-d1) — D1 + Drizzle + Kysely lengkap
+- [Database Schema](./database-schema) — Schema yang sudah ada
 
-## 📖 Navigasi Dokumentasi
+### ⚙️ Setup Lanjutan
+- [Environment Variables](./environment-variables) — Daftar lengkap env vars
+- [Google OAuth](./google-oauth) — Setup login dengan Google
+- [Resend Email](./resend-email) — Setup email verification
+- [Cloudflare R2](./cloudflare-r2) — Setup file upload
+- [Customizing Schema](./customizing-schema) — Menambah tabel/kolom
 
-### 🚀 Core Guides (Mulai dari sini!)
+### 📖 Fitur Detail
+- [Authentication](./authentication) — Auth system lengkap
+- [File Uploads](./file-uploads) — Upload file ke R2
+- [Profile Management](./profile-management) — User profile system
 
-| Dokumen | Apa yang dipelajari | Estimasi |
-|---------|---------------------|----------|
-| [Getting Started](./getting-started) | Setup project dalam 5 menit | 10 menit |
-| [Development Flow](./development-flow) | Konsep & pola SvelteKit | 20 menit |
-| [Features](./features) | Menggunakan fitur built-in | 15 menit |
-| [Deployment](./deployment) | Deploy ke Cloudflare | 10 menit |
-
-### 🤖 AI Agent Workflow (⭐ Recommended)
-
-| Dokumen | Apa yang dipelajari | Estimasi |
-|---------|---------------------|----------|
-| [AI Agent Guide](./ai-first-development) | Panduan 3 AI Agent | 15 menit |
-| [INIT_AGENT](./ai-first-development#init-agent) | Setup project baru | 20 menit |
-| [TASK_AGENT](./ai-first-development#task-agent) | Implementasi fitur | ongoing |
-| [MANAGER_AGENT](./ai-first-development#manager-agent) | Change management | 10 menit |
-| [Prompt Templates](./ai-first-development#prompt-templates) | Template prompt manual | 10 menit |
-
-### 🏗️ Arsitektur & Advanced (Opsional)
-
-| Dokumen | Topik | Untuk |
-|---------|-------|-------|
-| [Architecture](./architecture) | System design | Semua |
-| [Project Structure](./project-structure) | Struktur folder | Semua |
-| [Database Schema](./database-schema) | Schema & relations | Semua |
-| [SvelteKit Patterns](./sveltekit-patterns) | Best practices | Intermediate |
-
-### ⚙️ Setup Lanjutan (Opsional)
-
-| Dokumen | Fitur | Waktu |
-|---------|-------|-------|
-| [Environment Variables](./environment-variables) | Konfigurasi lengkap | 15 menit |
-| [Database D1](./database-d1) | Setup database | 15 menit |
-| [Google OAuth](./google-oauth) | Login dengan Google | 15 menit |
-| [Resend Email](./resend-email) | Email verification | 15 menit |
-| [Cloudflare R2](./cloudflare-r2) | File upload storage | 20 menit |
-
-### 🐛 Troubleshooting
-
-| Dokumen | Masalah yang dibahas |
-|---------|---------------------|
-| [Database Issues](../troubleshooting/database) | D1, migrations, queries |
-| [Authentication Issues](../troubleshooting/authentication) | Login, session, OAuth |
-| [Upload Issues](../troubleshooting/upload) | File upload, R2 |
-| [Deployment Issues](../troubleshooting/deployment) | Build, deploy, errors |
+### 🚀 Deployment
+- [Deployment](./deployment) — Deploy ke Cloudflare Pages
 
 ---
 
-## 💡 Tips Membaca Dokumentasi
+## 🆘 Butuh Bantuan?
 
-### Untuk Pemula
-- 📖 **Mulai dari Getting Started** - Jangan skip, setup dijelaskan step-by-step
-- 🎯 **Ikuti Development Flow** - Pahami konsep sebelum coding
-- ⚠️ **Check Troubleshooting** - Kalau stuck, lihat solusi umum
-- 🤖 **Gunakan AI** - Tanya AI jika ada yang tidak paham
-
-### Untuk Developer Berpengalaman
-- 🏗️ **Review Architecture** - Pahami edge-first patterns
-- 🤖 **AI-First Guide** - Maximize productivity dengan AI
-- ⚡ **Check Performance** - Optimasi awal lebih baik
-- 🔐 **Follow Security** - Production needs hardening
-
----
-
-## 🛠️ Tech Stack Overview
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  SvelteKit 2.x    │  Framework full-stack                │
-│  Svelte 5         │  UI library dengan Runes             │
-│  Cloudflare D1    │  SQLite database di edge             │
-│  Drizzle ORM 0.40 │  Type-safe SQL                       │
-│  Lucia Auth       │  Session-based authentication        │
-│  Tailwind CSS 4   │  CSS-first styling                   │
-│  Cloudflare Pages │  Edge deployment                     │
-└─────────────────────────────────────────────────────────┘
-```
-
-> 🆕 **Update 2026**: Project ini menggunakan Svelte 5 dengan Runes dan Tailwind CSS 4.
-
----
-
-## 🤝 Kontribusi
-
-Dokumentasi ini open source! Kontribusi selalu welcome:
-- ❌ Error atau typo
-- 🆕 Topik yang belum tercakup  
-- 💡 Cara penjelasan yang lebih baik
-- 🤖 Prompt template baru untuk AI
-
----
-
-## 🚀 Siap Mulai?
-
-Pilih jalur sesuai kebutuhan:
-
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-  <a href="./getting-started" class="block p-6 rounded-xl text-center transition-all duration-200" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #0a0a0a;">
-    <div class="text-3xl mb-2">🚀</div>
-    <div class="font-bold text-lg">Getting Started</div>
-    <div class="text-sm opacity-80">Setup dalam 5 menit</div>
-  </a>
-  <a href="./ai-first-development" class="block p-6 rounded-xl text-center transition-all duration-200 hover:opacity-90" style="background: #171717; border: 1px solid #262626; color: #f5f5f5;">
-    <div class="text-3xl mb-2">🤖</div>
-    <div class="font-bold text-lg">AI Agent Workflow ⭐</div>
-    <div class="text-sm opacity-70">3 Agent: INIT → TASK → MANAGER</div>
-  </a>
-</div>
-
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <a href="./development-flow" class="block p-6 rounded-xl text-center transition-all duration-200 hover:opacity-90" style="background: #171717; border: 1px solid #262626; color: #f5f5f5;">
-    <div class="text-3xl mb-2">🌊</div>
-    <div class="font-bold text-lg">Development Flow</div>
-    <div class="text-sm opacity-70">Pahami konsepnya</div>
-  </a>
-  <a href="./features" class="block p-6 rounded-xl text-center transition-all duration-200 hover:opacity-90" style="background: #171717; border: 1px solid #262626; color: #f5f5f5;">
-    <div class="text-3xl mb-2">🎨</div>
-    <div class="font-bold text-lg">Features</div>
-    <div class="text-sm opacity-70">Lihat fitur built-in</div>
-  </a>
-</div>
-
----
-
-**Happy coding! 🎉**
-
-Ada pertanyaan? Check [troubleshooting section](../troubleshooting/database) atau buat issue di GitHub.
+Cek [Troubleshooting](/troubleshooting/) untuk solusi masalah umum:
+- [Database Issues](/troubleshooting/database)
+- [Authentication Issues](/troubleshooting/authentication)
+- [Deployment Issues](/troubleshooting/deployment)
+- [Upload Issues](/troubleshooting/upload)

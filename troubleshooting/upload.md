@@ -1,490 +1,166 @@
-# Troubleshooting: File Upload Issues
+# Upload Issues
 
-Solusi untuk masalah upload avatar, gambar, dan file ke Cloudflare R2.
+Masalah umum terkait file upload dan solusinya.
 
----
+## Upload Failed
 
-## 🔴 Error: "Upload failed" atau 413 Payload Too Large
+### "Failed to fetch"
 
-### Penyebab
-File terlalu besar (limit default: 5MB untuk avatar).
+**Penyebab:** Network error atau API endpoint salah.
 
-### Solusi
+**Solusi:**
 
-#### 1. Check File Size Limit
-
+1. Cek API endpoint:
 ```typescript
-// src/routes/api/upload/image/+server.ts
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-
-export const POST = async ({ request }) => {
-  const form = await request.formData();
-  const file = form.get('file') as File;
-  
-  if (file.size > MAX_SIZE) {
-    return json(
-      { error: 'File terlalu besar. Maksimal 5MB.' }, 
-      { status: 413 }
-    );
-  }
-  // ...
-};
-```
-
-#### 2. Compress Image Sebelum Upload
-
-```typescript
-// Client-side compression
-async function compressImage(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    img.onload = () => {
-      // Resize jika terlalu besar
-      const maxWidth = 1200;
-      const scale = Math.min(1, maxWidth / img.width);
-      
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      
-      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
-      canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject('Failed'),
-        'image/webp',
-        0.85 // Quality
-      );
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-}
-```
-
-#### 3. Use Presigned URL untuk File Besar
-
-```typescript
-// Upload langsung ke R2 untuk file besar (>5MB)
-const res = await fetch('/api/upload/presign', {
+const res = await fetch('/api/upload/image', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    filename: 'large-file.pdf',
-    contentType: 'application/pdf'
-  })
-});
-
-const { uploadUrl } = await res.json();
-
-// Upload langsung ke R2
-await fetch(uploadUrl, {
-  method: 'PUT',
-  body: file,
-  headers: { 'Content-Type': 'application/pdf' }
+  body: formData
 });
 ```
 
----
-
-## 🔴 Error: "Invalid file type"
-
-### Penyebab
-File type tidak diizinkan atau tidak terdeteksi dengan benar.
-
-### Solusi
-
-#### 1. Check Allowed Types
-
-```typescript
-// src/routes/api/upload/image/+server.ts
-const ALLOWED_TYPES = [
-  'image/jpeg',
-  'image/png', 
-  'image/webp',
-  'image/gif'
-];
-
-export const POST = async ({ request }) => {
-  const file = form.get('file') as File;
-  
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return json(
-      { error: `Tipe file ${file.type} tidak diizinkan` },
-      { status: 400 }
-    );
-  }
-  // ...
-};
-```
-
-#### 2. Validate dengan Magic Numbers
-
-File type bisa di-spoof. Validate dengan file signature:
-
-```typescript
-async function validateFileType(file: File): Promise<boolean> {
-  const buffer = await file.slice(0, 4).arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  
-  // JPEG: FF D8 FF
-  if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
-    return true;
-  }
-  
-  // PNG: 89 50 4E 47
-  if (bytes[0] === 0x89 && bytes[1] === 0x50) {
-    return true;
-  }
-  
-  // WebP: 52 49 46 46 (RIFF header)
-  if (bytes[0] === 0x52 && bytes[1] === 0x49) {
-    return true;
-  }
-  
-  return false;
-}
-```
+2. Cek CORS:
+- Pastikan endpoint di `src/routes/api/upload/` bukan external API
 
 ---
 
-## 🔴 Error: "R2 binding not found"
+### "R2_BUCKET not found"
 
-### Penyebab
-Binding R2 tidak terkonfigurasi dengan benar.
+**Penyebab:** R2 binding belum setup.
 
-### Solusi
+**Solusi:**
 
-#### 1. Check wrangler.toml
-
+1. Buat bucket di Cloudflare R2
+2. Update `wrangler.toml`:
 ```toml
 [[r2_buckets]]
-binding = "STORAGE"  # Nama binding yang digunakan di code
-bucket_name = "your-bucket-name"
+binding = "STORAGE"
+bucket_name = "my-app-storage"
 ```
 
-#### 2. Dashboard Binding
-
-1. Buka Cloudflare Dashboard → Pages → Your Project
-2. Settings → R2 Buckets
-3. Add Binding:
-   - Variable name: `STORAGE`
-   - R2 bucket: Select your bucket
-
-#### 3. Test R2 Access
-
-```typescript
-// Test endpoint
-export const GET = async ({ platform }) => {
-  try {
-    const objects = await platform.env.STORAGE.list();
-    return json({ buckets: objects.objects.map(o => o.key) });
-  } catch (error) {
-    return json({ error: error.message }, { status: 500 });
-  }
-};
+3. Set environment variables:
+```env
+R2_ACCOUNT_ID=xxx
+R2_ACCESS_KEY_ID=xxx
+R2_SECRET_ACCESS_KEY=xxx
 ```
 
 ---
 
-## 🔴 Error: "Presigned URL expired"
+### File Too Large
+
+**Penyebab:** File melebihi limit.
+
+**Solusi:**
+
+1. Check file size sebelum upload:
+```typescript
+if (file.size > 5 * 1024 * 1024) {  // 5MB
+  alert('File too large. Max 5MB.');
+  return;
+}
+```
+
+2. Untuk large files, gunakan presigned URL:
+```typescript
+const { url } = await fetch('/api/upload/presign').then(r => r.json());
+await fetch(url, { method: 'PUT', body: file });
+```
+
+---
+
+## Image Tidak Tampil
+
+### "Failed to load resource"
+
+**Penyebab:** URL salah atau file tidak exists.
+
+**Solusi:**
+
+1. Cek URL:
+```svelte
+<!-- Pastikan URL lengkap -->
+<img src={user.avatar} alt="Avatar" />
+
+<!-- Atau dengan fallback -->
+<img src={user.avatar || '/default-avatar.png'} alt="Avatar" />
+```
+
+2. Cek file exists di R2:
+```bash
+npx wrangler r2 object list my-app-storage
+```
+
+---
+
+## WebP Conversion Failed
 
 ### Penyebab
-Presigned URL hanya valid untuk waktu terbatas (default: 5 menit).
+Canvas API tidak support di server (Cloudflare Workers).
 
 ### Solusi
 
-#### 1. Generate URL sebelum Upload
-
+Conversion terjadi di client sebelum upload:
 ```typescript
-// Generate presigned URL just-in-time
-const getPresignedUrl = async (filename: string) => {
-  const res = await fetch('/api/upload/presign', {
-    method: 'POST',
-    body: JSON.stringify({ filename })
-  });
-  
-  const { uploadUrl } = await res.json();
-  
-  // Upload segera
-  await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file
-  });
-};
+// Di browser
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+// ... draw image
+canvas.toBlob((blob) => {
+  // Upload blob
+}, 'image/webp');
 ```
 
-#### 2. Extend Expiry Time (jika perlu)
-
-```typescript
-// src/lib/storage/r2.ts
-export async function generatePresignedUrl(
-  filename: string,
-  expiresIn: number = 15 * 60 // 15 menit
-) {
-  const command = new PutObjectCommand({
-    Bucket: R2_BUCKET_NAME,
-    Key: filename,
-    ContentType: 'application/octet-stream'
-  });
-  
-  return getSignedUrl(s3Client, command, { expiresIn });
-}
-```
+Atau gunakan library client-side seperti `browser-image-compression`.
 
 ---
 
-## 🔴 Image Tidak Ter-load setelah Upload
-
-### Penyebab & Solusi
-
-#### 1. Check R2 Public URL
-
-```typescript
-// Pastikan R2_PUBLIC_URL di .env
-R2_PUBLIC_URL=https://pub-yourid.r2.dev
-```
-
-#### 2. Object Access Control
-
-```typescript
-// Pastikan object public
-await platform.env.STORAGE.put(filename, file, {
-  httpMetadata: {
-    contentType: file.type,
-    cacheControl: 'public, max-age=31536000'
-  }
-});
-```
-
-#### 3. CORS Configuration
-
-```json
-// R2 Bucket CORS Rules
-[
-  {
-    "AllowedOrigins": ["https://yourdomain.com"],
-    "AllowedMethods": ["GET", "HEAD"],
-    "AllowedHeaders": ["*"],
-    "MaxAgeSeconds": 3600
-  }
-]
-```
-
----
-
-## 🔴 Upload Progress Tidak Muncul
-
-### Solusi: Implementasi dengan XMLHttpRequest
-
-```svelte
-<script>
-  let progress = 0;
-  let uploading = false;
-  
-  async function uploadWithProgress(file: File) {
-    uploading = true;
-    progress = 0;
-    
-    const xhr = new XMLHttpRequest();
-    
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        progress = Math.round((e.loaded / e.total) * 100);
-      }
-    };
-    
-    return new Promise((resolve, reject) => {
-      xhr.onload = () => resolve(xhr.response);
-      xhr.onerror = reject;
-      
-      xhr.open('POST', '/api/upload/image');
-      const formData = new FormData();
-      formData.append('file', file);
-      xhr.send(formData);
-    });
-  }
-</script>
-
-{#if uploading}
-  <div class="progress-bar">
-    <div class="progress" style="width: {progress}%"></div>
-  </div>
-  <p>{progress}%</p>
-{/if}
-```
-
----
-
-## 🔴 WebP Conversion Failed
+## Presigned URL Expired
 
 ### Penyebab
-Browser tidak support WebP atau conversion error.
+URL expired (default 15 menit).
 
-### Solusi: Fallback
+### Solusi
 
+Generate URL baru:
 ```typescript
-async function convertToWebP(file: File): Promise<Blob> {
-  // Check WebP support
-  const hasWebPSupport = document
-    .createElement('canvas')
-    .toDataURL('image/webp')
-    .startsWith('data:image/webp');
-  
-  if (!hasWebPSupport) {
-    // Return original jika tidak support
-    return file;
-  }
-  
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = URL.createObjectURL(file);
-    });
-    
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx?.drawImage(img, 0, 0);
-    
-    const webpBlob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject('Conversion failed'),
-        'image/webp',
-        0.85
-      );
-    });
-    
-    return webpBlob;
-  } catch (error) {
-    console.error('WebP conversion failed:', error);
-    return file; // Fallback to original
-  }
+// Generate fresh URL
+const { url } = await fetch('/api/upload/presign').then(r => r.json());
+```
+
+Atau perpanjang expiration:
+```typescript
+// server
+const url = await getSignedUrl(r2Client, command, { expiresIn: 3600 });  // 1 jam
+```
+
+---
+
+## CORS Error
+
+### "Access-Control-Allow-Origin"
+
+**Penyebab:** R2 CORS policy tidak di-setup.
+
+**Solusi:**
+
+Set CORS policy di R2 dashboard:
+1. R2 > [bucket] > Settings > CORS Policy
+2. Add rule:
+```json
+{
+  "AllowedOrigins": ["https://your-app.pages.dev"],
+  "AllowedMethods": ["GET", "PUT"],
+  "AllowedHeaders": ["*"]
 }
 ```
 
 ---
 
-## 🔴 Multiple File Upload Issues
+## Checklist Upload
 
-### Solusi: Queue Upload
-
-```svelte
-<script>
-  let files: File[] = [];
-  let uploadQueue = [];
-  
-  async function uploadMultiple(files: File[]) {
-    uploadQueue = files.map(file => ({
-      file,
-      status: 'pending',
-      progress: 0
-    }));
-    
-    // Upload sequentially atau parallel dengan limit
-    const CONCURRENT_UPLOADS = 3;
-    
-    for (let i = 0; i < uploadQueue.length; i += CONCURRENT_UPLOADS) {
-      const batch = uploadQueue.slice(i, i + CONCURRENT_UPLOADS);
-      
-      await Promise.all(
-        batch.map(item => uploadFile(item))
-      );
-    }
-  }
-  
-  async function uploadFile(item) {
-    item.status = 'uploading';
-    
-    try {
-      const formData = new FormData();
-      formData.append('file', item.file);
-      
-      const res = await fetch('/api/upload/image', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!res.ok) throw new Error('Upload failed');
-      
-      item.status = 'completed';
-    } catch (error) {
-      item.status = 'error';
-    }
-  }
-</script>
-```
-
----
-
-## 🔧 Debug Upload
-
-### Test Upload dengan cURL
-
-```bash
-# Test image upload
-curl -X POST http://localhost:5173/api/upload/image \
-  -F "file=@test-image.jpg" \
-  -F "type=avatar"
-
-# Test dengan cookies (authenticated)
-curl -X POST http://localhost:5173/api/upload/image \
-  -b cookies.txt \
-  -F "file=@test-image.jpg"
-```
-
-### Check R2 Bucket Contents
-
-```bash
-# List objects
-npx wrangler r2 object list your-bucket-name
-
-# Check specific object
-npx wrangler r2 object get your-bucket-name uploads/avatar-xxx.webp
-```
-
----
-
-## 🆘 Quick Fixes
-
-### Clear Upload Errors
-
-```svelte
-<script>
-  let error = null;
-  
-  function clearError() {
-    error = null;
-  }
-  
-  async function handleUpload(file: File) {
-    try {
-      error = null;
-      await uploadFile(file);
-    } catch (e) {
-      error = e.message;
-    }
-  }
-</script>
-
-{#if error}
-  <div class="error">
-    {error}
-    <button on:click={clearError}>Coba Lagi</button>
-  </div>
-{/if}
-```
-
----
-
-## 📚 Resources
-
-- [Cloudflare R2 Docs](https://developers.cloudflare.com/r2/)
-- [S3 Presigned URLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)
-- [Canvas API](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
-- [FormData API](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
+- [ ] R2 bucket created
+- [ ] `wrangler.toml` has R2 binding
+- [ ] Environment variables set
+- [ ] CORS configured (untuk presigned URL)
+- [ ] File size checked
+- [ ] File type validated

@@ -1,499 +1,256 @@
-# Tutorial 2: Todo App ✅
+# Tutorial 2: Todo App
 
-> **Goal:** Buat aplikasi Todo List lengkap dengan database  
-> **Waktu:** 20 menit  
-> **Level:** Pemula  
-> **Prerequisite:** Sudah mengikuti [Tutorial 1: Hello World](./01-hello-world)
+Build full CRUD todo app dengan database.
 
----
+## Tujuan
 
-## 🎯 Apa yang Akan Kita Buat?
+- Buat tabel database
+- Implement CRUD (Create, Read, Update, Delete)
+- Gunakan SvelteKit Form Actions
+- Style dengan Tailwind
 
-Aplikasi Todo List sederhana yang bisa:
-- ✅ Menambah todo baru
-- ✅ Menandai todo selesai/belum
-- ✅ Menghapus todo
-- ✅ Semua data tersimpan di database
+## Final Result
 
-```
-┌─────────────────────────────────────┐
-│  ✅ Todo App                        │
-├─────────────────────────────────────┤
-│                                     │
-│  [________________] [Tambah]        │
-│                                     │
-│  ☐ Belajar SvelteKit               │
-│  ☑️ Deploy ke Cloudflare   [🗑️]    │
-│  ☐ Minum kopi ☕           [🗑️]    │
-│                                     │
-│  2 dari 3 selesai                   │
-│                                     │
-└─────────────────────────────────────┘
-```
+Aplikasi todo dengan:
+- ✅ Add todo
+- ✅ Mark as complete
+- ✅ Delete todo
+- ✅ Filter by status
+- ✅ Persist ke database
 
----
+## Step 1: Database Schema
 
-## 📚 Step 0: Persiapan Database
-
-Sebelum mulai coding, kita perlu membuat tabel di database.
-
-### Buat File Schema
-
-Edit file: `src/lib/db/schema.ts`
-
-Tambahkan di bagian bawah (setelah tabel `users`):
+Update `src/lib/db/schema.ts`:
 
 ```typescript
-// Tabel untuk Todo
 export const todos = sqliteTable('todos', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	userId: integer('user_id').references(() => users.id),
-	title: text('title').notNull(),
-	completed: integer('completed', { mode: 'boolean' }).default(false),
-	createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date())
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  completed: integer('completed', { mode: 'boolean' }).default(false),
+  createdAt: integer('created_at', { mode: 'number' })
+    .$defaultFn(() => Date.now()),
 });
 ```
 
-### Generate Migration
+Update `src/lib/db/index.ts`:
 
-Jalankan di terminal:
+```typescript
+export interface Database {
+  // ... existing tables
+  
+  todos: {
+    id: string;
+    title: string;
+    completed: number;  // 0 or 1
+    created_at: number;
+  };
+}
+
+export type Todo = Database['todos'];
+export type NewTodo = Omit<Todo, 'id' | 'created_at'>;
+```
+
+Generate dan apply migration:
 
 ```bash
 npm run db:generate
-```
-
-Output yang diharapkan:
-```
-✓ Generated migration files
-```
-
-### Apply Migration
-
-```bash
 npm run db:migrate:local
 ```
 
-**💡 Apa itu Migration?**  
-Migration adalah cara memberitahu database: "Hey, saya mau tambah tabel baru namanya todos". Ini seperti blueprint untuk database.
+## Step 2: Route dengan Load + Actions
 
----
-
-## 🚀 Step 1: Buat Halaman Todo (Load Data)
-
-Buat folder dan file: `src/routes/todos/+page.server.ts`
+Buat `src/routes/todos/+page.server.ts`:
 
 ```typescript
-import { db } from '$lib/db';
-import { todos } from '$lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import type { PageServerLoad, Actions } from './$types';
+import { fail } from '@sveltejs/kit';
+import { nanoid } from 'nanoid';
 
-// Load data saat halaman dibuka
-export const load = async ({ locals }) => {
-	// Ambil semua todo, urutkan dari yang terbaru
-	const allTodos = await db.query.todos.findMany({
-		orderBy: desc(todos.createdAt)
-	});
+export const load: PageServerLoad = async ({ locals }) => {
+  const todos = await locals.db
+    .selectFrom('todos')
+    .selectAll()
+    .orderBy('created_at', 'desc')
+    .execute();
+  
+  return { todos };
+};
 
-	return {
-		todos: allTodos
-	};
+export const actions: Actions = {
+  create: async ({ request, locals }) => {
+    const form = await request.formData();
+    const title = form.get('title');
+    
+    if (!title || typeof title !== 'string') {
+      return fail(400, { error: 'Title required' });
+    }
+    
+    await locals.db
+      .insertInto('todos')
+      .values({
+        id: nanoid(),
+        title,
+        completed: 0,
+        created_at: Date.now()
+      })
+      .execute();
+    
+    return { success: true };
+  },
+  
+  toggle: async ({ request, locals }) => {
+    const form = await request.formData();
+    const id = form.get('id');
+    const completed = form.get('completed') === 'true' ? 1 : 0;
+    
+    await locals.db
+      .updateTable('todos')
+      .set({ completed: completed ? 0 : 1 })
+      .where('id', '=', id)
+      .execute();
+    
+    return { success: true };
+  },
+  
+  delete: async ({ request, locals }) => {
+    const form = await request.formData();
+    const id = form.get('id');
+    
+    await locals.db
+      .deleteFrom('todos')
+      .where('id', '=', id)
+      .execute();
+    
+    return { success: true };
+  }
 };
 ```
 
-**💡 Penjelasan:**
-- `+page.server.ts` = File yang jalan di SERVER sebelum halaman ditampilkan
-- `export const load` = Function untuk mengambil data
-- `db.query.todos.findMany()` = Ambil semua data dari tabel todos
-- `orderBy: desc(todos.createdAt)` = Urutkan dari yang paling baru
+## Step 3: Svelte Component
 
----
-
-## 🎨 Step 2: Buat Tampilan Halaman
-
-Buat file: `src/routes/todos/+page.svelte`
+Buat `src/routes/todos/+page.svelte`:
 
 ```svelte
 <script>
-	// Data dari server
-	export let data;
-	
-	// Reactive variable untuk list todo
-	$: todos = data.todos;
-	
-	// Input untuk todo baru
-	let newTodoTitle = '';
-	
-	// Hitung progress
-	$: completedCount = todos.filter(t => t.completed).length;
-	$: totalCount = todos.length;
+  let { data, form } = $props();
+  let filter = $state('all'); // 'all' | 'active' | 'completed'
+  
+  let filteredTodos = $derived(
+    data.todos.filter(t => {
+      if (filter === 'active') return !t.completed;
+      if (filter === 'completed') return t.completed;
+      return true;
+    })
+  );
 </script>
 
-<div class="container">
-	<h1>✅ Todo App</h1>
-	
-	<!-- Form Tambah Todo -->
-	<form method="POST" action="?/addTodo" class="add-form">
-		<input
-			type="text"
-			name="title"
-			placeholder="Apa yang perlu dilakukan?"
-			bind:value={newTodoTitle}
-			required
-		/>
-		<button type="submit" class="btn-primary">Tambah</button>
-	</form>
-	
-	<!-- List Todo -->
-	<div class="todo-list">
-		{#if todos.length === 0}
-			<p class="empty">Belum ada todo. Tambahkan yang pertama! 🎉</p>
-		{:else}
-			{#each todos as todo}
-				<div class="todo-item" class:completed={todo.completed}>
-					<!-- Checkbox -->
-					<form method="POST" action="?/toggleTodo" class="inline-form">
-						<input type="hidden" name="id" value={todo.id} />
-						<input 
-							type="checkbox" 
-							checked={todo.completed}
-							on:change={(e) => e.target.form.requestSubmit()}
-						/>
-					</form>
-					
-					<!-- Title -->
-					<span class="todo-title">{todo.title}</span>
-					
-					<!-- Delete Button -->
-					<form method="POST" action="?/deleteTodo" class="inline-form">
-						<input type="hidden" name="id" value={todo.id} />
-						<button type="submit" class="btn-delete" title="Hapus">🗑️</button>
-					</form>
-				</div>
-			{/each}
-		{/if}
-	</div>
-	
-	<!-- Progress -->
-	{#if totalCount > 0}
-		<div class="progress">
-			<p>{completedCount} dari {totalCount} selesai</p>
-			<div class="progress-bar">
-				<div 
-					class="progress-fill" 
-					style="width: {(completedCount / totalCount) * 100}%"
-				></div>
-			</div>
-		</div>
-	{/if}
+<div class="max-w-2xl mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-8">Todo App</h1>
+  
+  <!-- Add Form -->
+  <form method="POST" action="?/create" class="flex gap-2 mb-6">
+    <input 
+      name="title"
+      placeholder="What needs to be done?"
+      class="input flex-1"
+      required
+    />
+    <button type="submit" class="btn-primary">Add</button>
+  </form>
+  
+  {#if form?.error}
+    <div class="text-red-600 mb-4">{form.error}</div>
+  {/if}
+  
+  <!-- Filters -->
+  <div class="flex gap-2 mb-6">
+    {#each ['all', 'active', 'completed'] as f}
+      <button 
+        class="px-3 py-1 rounded {filter === f ? 'bg-indigo-600 text-white' : 'bg-slate-200'}"
+        onclick={() => filter = f}
+      >
+        {f}
+      </button>
+    {/each}
+  </div>
+  
+  <!-- Todo List -->
+  <div class="space-y-2">
+    {#each filteredTodos as todo (todo.id)}
+      <div class="card flex items-center gap-4 p-4">
+        <form method="POST" action="?/toggle" class="flex items-center gap-3 flex-1">
+          <input type="hidden" name="id" value={todo.id} />
+          <input type="hidden" name="completed" value={todo.completed} />
+          
+          <button type="submit" class="w-6 h-6 rounded border-2 flex items-center justify-center
+            {todo.completed ? 'bg-green-500 border-green-500' : 'border-slate-300'}">
+            {#if todo.completed}
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            {/if}
+          </button>
+          
+          <span class="flex-1 {todo.completed ? 'line-through text-slate-400' : ''}">
+            {todo.title}
+          </span>
+        </form>
+        
+        <form method="POST" action="?/delete">
+          <input type="hidden" name="id" value={todo.id} />
+          <button type="submit" class="text-red-500 hover:text-red-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    {/each}
+  </div>
+  
+  {#if filteredTodos.length === 0}
+    <p class="text-center text-slate-400 py-8">No todos yet!</p>
+  {/if}
 </div>
-
-<style>
-	.container {
-		max-width: 600px;
-		margin: 40px auto;
-		padding: 20px;
-		font-family: system-ui, -apple-system, sans-serif;
-	}
-
-	h1 {
-		color: #ff3e00;
-		text-align: center;
-		margin-bottom: 30px;
-	}
-
-	.add-form {
-		display: flex;
-		gap: 10px;
-		margin-bottom: 20px;
-	}
-
-	.add-form input {
-		flex: 1;
-		padding: 12px 16px;
-		border: 2px solid #e2e8f0;
-		border-radius: 8px;
-		font-size: 1rem;
-	}
-
-	.add-form input:focus {
-		outline: none;
-		border-color: #ff3e00;
-	}
-
-	.btn-primary {
-		padding: 12px 24px;
-		background: #ff3e00;
-		color: white;
-		border: none;
-		border-radius: 8px;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: background 0.2s;
-	}
-
-	.btn-primary:hover {
-		background: #e63600;
-	}
-
-	.todo-list {
-		background: white;
-		border-radius: 12px;
-		box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-		overflow: hidden;
-	}
-
-	.todo-item {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 16px 20px;
-		border-bottom: 1px solid #e2e8f0;
-		transition: background 0.2s;
-	}
-
-	.todo-item:last-child {
-		border-bottom: none;
-	}
-
-	.todo-item:hover {
-		background: #f8fafc;
-	}
-
-	.todo-item.completed .todo-title {
-		text-decoration: line-through;
-		color: #94a3b8;
-	}
-
-	.todo-title {
-		flex: 1;
-		font-size: 1rem;
-	}
-
-	.inline-form {
-		display: inline;
-	}
-
-	.inline-form input[type="checkbox"] {
-		width: 20px;
-		height: 20px;
-		cursor: pointer;
-	}
-
-	.btn-delete {
-		background: none;
-		border: none;
-		cursor: pointer;
-		font-size: 1.2rem;
-		padding: 4px 8px;
-		opacity: 0.6;
-		transition: opacity 0.2s;
-	}
-
-	.btn-delete:hover {
-		opacity: 1;
-	}
-
-	.empty {
-		text-align: center;
-		color: #64748b;
-		padding: 40px;
-	}
-
-	.progress {
-		margin-top: 20px;
-		text-align: center;
-	}
-
-	.progress p {
-		color: #64748b;
-		margin-bottom: 8px;
-	}
-
-	.progress-bar {
-		height: 8px;
-		background: #e2e8f0;
-		border-radius: 4px;
-		overflow: hidden;
-	}
-
-	.progress-fill {
-		height: 100%;
-		background: #22c55e;
-		transition: width 0.3s ease;
-	}
-</style>
 ```
 
----
+## Step 4: Test
 
-## ⚡ Step 3: Tambah Form Actions
-
-Edit file: `src/routes/todos/+page.server.ts`
-
-Tambahkan di bagian bawah:
-
-```typescript
-import { db } from '$lib/db';
-import { todos } from '$lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
-import { fail } from '@sveltejs/kit';
-
-export const load = async () => {
-	const allTodos = await db.query.todos.findMany({
-		orderBy: desc(todos.createdAt)
-	});
-	return { todos: allTodos };
-};
-
-// ⬇️ TAMBAHKAN INI ⬇️
-export const actions = {
-	// Action: Tambah Todo
-	addTodo: async ({ request }) => {
-		const form = await request.formData();
-		const title = form.get('title');
-
-		// Validasi
-		if (!title || typeof title !== 'string' || title.trim() === '') {
-			return fail(400, { error: 'Todo tidak boleh kosong' });
-		}
-
-		// Insert ke database
-		await db.insert(todos).values({
-			title: title.trim(),
-			completed: false
-		});
-
-		return { success: true };
-	},
-
-	// Action: Toggle Complete/Uncomplete
-	toggleTodo: async ({ request }) => {
-		const form = await request.formData();
-		const id = Number(form.get('id'));
-
-		// Ambil todo yang ada
-		const todo = await db.query.todos.findFirst({
-			where: eq(todos.id, id)
-		});
-
-		if (todo) {
-			// Update status (toggle)
-			await db.update(todos)
-				.set({ completed: !todo.completed })
-				.where(eq(todos.id, id));
-		}
-
-		return { success: true };
-	},
-
-	// Action: Hapus Todo
-	deleteTodo: async ({ request }) => {
-		const form = await request.formData();
-		const id = Number(form.get('id'));
-
-		await db.delete(todos).where(eq(todos.id, id));
-
-		return { success: true };
-	}
-};
+```bash
+npm run dev
 ```
 
-**💡 Penjelasan:**
-- `export const actions` = Object berisi function untuk handle form submission
-- `request.formData()` = Ambil data dari form HTML
-- `db.insert(todos).values({...})` = Insert data ke database
-- `db.update(todos).set({...}).where(...)` = Update data
-- `db.delete(todos).where(...)` = Hapus data
+Buka http://localhost:5173/todos
 
----
+Test:
+- Add todo
+- Toggle complete
+- Delete todo
+- Filter todos
 
-## ✅ Step 4: Test Aplikasi!
+## Step 5: Deploy
 
-1. Buka browser: http://localhost:5173/todos
-2. Coba tambah todo baru
-3. Coba checklist/uncheck todo
-4. Coba hapus todo
-
-**🎉 Keren! Anda sudah membuat aplikasi CRUD lengkap!**
-
----
-
-## 🧠 Konsep Penting yang Dipelajari
-
-### 1. CRUD Operations
-
-| Operation | Database Action | File |
-|-----------|----------------|------|
-| **C**reate | `db.insert()` | `addTodo` action |
-| **R**ead | `db.query.findMany()` | `load` function |
-| **U**pdate | `db.update().set()` | `toggleTodo` action |
-| **D**elete | `db.delete()` | `deleteTodo` action |
-
-### 2. Form Actions vs API Routes
-
-**Form Actions (yang kita pakai):**
-- ✅ Works tanpa JavaScript
-- ✅ 1 file (`+page.server.ts`)
-- ✅ Auto reload page setelah submit
-
-**API Routes (alternatif):**
-- Butuh JavaScript fetch
-- Butuh 2 file (`+server.ts` + `+page.svelte`)
-- Manual update UI
-
-### 3. Server vs Client
-
-```
-+page.server.ts  →  Jalan di SERVER (sebelum halaman ditampilkan)
-+page.svelte     →  Jalan di CLIENT (di browser user)
+```bash
+npm run build
+npm run deploy
 ```
 
----
+## What You Learned
 
-## 🎨 Eksperimen
+- ✅ Database schema dengan Drizzle
+- ✅ Kysely queries (select, insert, update, delete)
+- ✅ SvelteKit Load functions
+- ✅ SvelteKit Form Actions
+- ✅ Svelte 5 Runes ($state, $derived)
+- ✅ Progressive enhancement (works without JS!)
 
-### 1. Tambah Validasi Panjang
-```typescript
-if (title.length > 100) {
-	return fail(400, { error: 'Todo terlalu panjang (max 100 karakter)' });
-}
-```
+## Next Steps
 
-### 2. Tambah Filter (All/Active/Completed)
-Tambahkan tabs di atas list untuk filter todo.
-
-### 3. Tambah Edit Todo
-Tambahkan action baru `editTodo` untuk mengubah text todo.
-
-### 4. Tambah Due Date
-Tambahkan field `dueDate` di schema dan form.
+- Add user authentication
+- Add due dates
+- Add categories
+- Deploy dan share!
 
 ---
 
-## 🐛 Troubleshooting
-
-| Error | Solusi |
-|-------|--------|
-| `table todos does not exist` | Jalankan `npm run db:migrate:local` lagi |
-| `Cannot find module '$lib/db/schema'` | Check import path, pastikan file schema.ts ada |
-| Form tidak submit | Check browser console untuk error JavaScript |
-| Data tidak muncul | Pastikan `load` function return `{ todos: ... }` |
-
----
-
-## 🎯 Apa Selanjutnya?
-
-Di tutorial berikutnya, kita akan belajar:
-- 🔐 Authentication: Login & Register
-- 👤 User-specific todos (setiap user punya todo sendiri)
-- 🖼️ Upload file (avatar user)
-
-### [➡️ Lanjut ke Tutorial 3: User Authentication](./03-authentication)
-
-Atau pelajari **cookbook** untuk solusi cepat:
-- [Protect Route dengan Login](../cookbook/protect-route)
-- [Form Validation](../cookbook/form-validation)
-
----
-
-**🎉 Selamat! Anda sudah bisa membuat aplikasi database-driven dengan SvelteKit!**
+**Selamat! Anda sudah bisa build full CRUD app!** 🎉

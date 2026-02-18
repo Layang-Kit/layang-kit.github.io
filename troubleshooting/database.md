@@ -1,174 +1,204 @@
-# Troubleshooting: Database Issues
+# Database Issues
 
-Solusi untuk masalah-masalah yang berhubungan dengan Cloudflare D1 dan database.
+Masalah umum terkait database dan solusinya.
 
----
+## "D1 binding not found"
 
-## 🔴 Error: "D1 binding not found"
+### Penyebab
+- `database_id` salah di `wrangler.toml`
+- Belum login ke Cloudflare
+- Database belum dibuat
 
-### Gejala
-```
-Error: D1 binding not found
-    at Object.fetch (worker.js:1234:56)
-```
+### Solusi
 
-### Penyebab & Solusi
-
-#### 1. Database ID Belum di-set di `wrangler.toml`
-
-**Cek:**
-```bash
-# Lihat database ID
-npx wrangler d1 list
-```
-
-**Solusi:**
+1. Cek `wrangler.toml`:
 ```toml
-# wrangler.toml
 [[d1_databases]]
 binding = "DB"
 database_name = "my-app-db"
-database_id = "paste-database-id-di-sini"  # ⬅️ Pastikan ini benar
+database_id = "xxxxx-xxxx-xxxx-xxxx-xxxx"  # Pastikan ini benar
 ```
 
-#### 2. Belum Login ke Wrangler
-
+2. Verifikasi database exists:
 ```bash
-# Login terlebih dahulu
+npx wrangler d1 list
+```
+
+3. Login ulang:
+```bash
 npx wrangler login
-
-# Verifikasi
-npx wrangler whoami
-```
-
-#### 3. Environment Variables Tidak Terbaca
-
-**Cek file `.env`:**
-```bash
-CLOUDFLARE_ACCOUNT_ID=your_account_id
-CLOUDFLARE_DATABASE_ID=your_database_id  
-CLOUDFLARE_API_TOKEN=your_api_token
-```
-
-**Verifikasi:**
-```bash
-# Test koneksi
-npx wrangler d1 execute DB --local --command "SELECT 1"
 ```
 
 ---
 
-## 🔴 Error: "table users has no column named X"
-
-### Gejala
-```
-Error: table users has no column named bio
-    at D1Database._send (worker.js:...)
-```
+## "Table not found"
 
 ### Penyebab
-Schema di database tidak sinkron dengan schema di code.
+- Migration belum diapply
+- Migration failed
 
 ### Solusi
 
-#### 1. Jalankan Migration
-
+1. Generate migration:
 ```bash
-# Local
-npm run db:migrate:local
+npm run db:generate
+```
 
-# Production
+2. Apply ke local:
+```bash
+npm run db:migrate:local
+```
+
+3. Untuk production:
+```bash
 npm run db:migrate
 ```
 
-#### 2. Verify Schema
+---
 
-```bash
-# Cek struktur tabel
-npx wrangler d1 execute DB --local --command "PRAGMA table_info(users)"
+## "Column does not exist"
+
+### Penyebab
+- Schema dan Kysely types tidak sinkron
+- Salah case (camelCase vs snake_case)
+
+### Solusi
+
+1. Cek schema.ts:
+```typescript
+passwordHash: text('password_hash')  // camelCase
 ```
 
-#### 3. Reset Database (Development Only!)
+2. Cek index.ts:
+```typescript
+password_hash: string | null;  // Harus snake_case!
+```
 
+3. Jalankan type check:
 ```bash
-# Hapus dan buat ulang database local
-rm -rf .wrangler/state/d1
+npm run check
+```
 
-# Jalankan migration lagi
+---
+
+## Type Error Setelah Schema Change
+
+### Solusi
+
+1. Update `src/lib/db/index.ts`:
+```typescript
+export interface Database {
+  // Tambahkan tabel/kolom baru
+}
+```
+
+2. Jalankan check:
+```bash
+npm run check
+```
+
+3. Generate dan apply migration:
+```bash
+npm run db:generate
 npm run db:migrate:local
 ```
 
 ---
 
-## 🔴 Error: "Database is locked" atau Timeout
+## Migration Failed
 
-### Gejala
-```
-Error: database is locked
-Error: D1_EXECUTION_ERROR: Timeout
-```
+### Reset Local Database
 
-### Penyebab & Solusi
+**WARNING:** Ini akan hapus semua data local!
 
-#### 1. Query Terlalu Lama
-
-**Optimasi query:**
-```typescript
-// ✅ Tambahkan limit
-// ✅ Tambahkan limit
-const users = await locals.db
-  .selectFrom('users')
-  .limit(100)
-  .selectAll()
-  .execute();
-
-// ✅ Gunakan index
-const user = await locals.db
-  .selectFrom('users')
-  .where('email', '=', email)
-  .selectAll()
-  .executeTakeFirst();
+```bash
+npm run db:refresh:local
 ```
 
-#### 2. Concurrent Writes
+### Check Migration Status
 
-D1 punya batasan untuk concurrent writes:
-```typescript
-// ❌ Hindari: Banyak write bersamaan
-await Promise.all(
-  users.map(u => locals.db.insertInto('users').values(u).execute())
-);
-
-// ✅ Gunakan: Sequential writes
-for (const user of users) {
-  await locals.db.insertInto('users').values(user).execute();
-}
+```bash
+npx wrangler d1 migrations list DB --local
 ```
 
-#### 3. Long-Running Transactions
+### Manual Apply
 
-```typescript
-// ❌ Hindari: Transaction terlalu lama
-// ✅ Pecah menjadi transaction lebih kecil
-// ✅ Atau gunakan batch operations
+```bash
+npx wrangler d1 execute DB --local --file=./migrations/0001_initial.sql
 ```
 
 ---
 
-## 🔴 Error: "FOREIGN KEY constraint failed"
-
-### Gejala
-```
-Error: FOREIGN KEY constraint failed
-```
-
-### Penyebab
-Mencoba insert data dengan foreign key yang tidak ada.
+## Drizzle Studio Tidak Bisa Connect
 
 ### Solusi
 
+1. Pastikan database local running:
+```bash
+npm run dev  # Di terminal terpisah
+```
+
+2. Jalankan studio:
+```bash
+npm run db:studio
+```
+
+3. Buka http://local.drizzle.studio
+
+---
+
+## "database_id is required"
+
+### Penyebab
+Belum setup database.
+
+### Solusi
+
+```bash
+# Buat database
+npx wrangler d1 create my-app-db
+
+# Copy database_id ke wrangler.toml
+```
+
+---
+
+## Query Returns Empty Array
+
+### Penyebab
+- Data memang kosong
+- Where clause salah
+- Wrong table name
+
+### Debug
+
+1. Log query:
 ```typescript
-// ✅ Check existence terlebih dahulu
+const result = await locals.db
+  .selectFrom('posts')
+  .selectAll()
+  .execute();
+
+console.log('Result:', result);  // Check di terminal
+```
+
+2. Check di Drizzle Studio:
+```bash
+npm run db:studio
+```
+
+---
+
+## Foreign Key Constraint Failed
+
+### Penyebab
+Insert data dengan foreign key yang tidak exists.
+
+### Solusi
+
+Pastikan referenced row exists:
+```typescript
+// Pastikan user exists dulu
 const user = await locals.db
   .selectFrom('users')
   .where('id', '=', userId)
@@ -176,289 +206,45 @@ const user = await locals.db
   .executeTakeFirst();
 
 if (!user) {
-  return fail(400, { error: 'User tidak ditemukan' });
+  throw error(404, 'User not found');
 }
 
-// Insert dengan foreign key
-await locals.db.insertInto('posts').values({
-  title: 'My Post',
-  author_id: userId // Foreign key
-}).execute();
-```
-
-**Debug foreign keys:**
-```sql
--- Check foreign key constraints
-PRAGMA foreign_keys;
-
--- Check referential integrity
-PRAGMA foreign_key_check;
+// Baru insert
+await locals.db.insertInto('posts').values({ user_id: userId }).execute();
 ```
 
 ---
 
-## 🔴 Error: "UNIQUE constraint failed"
+## Performance Issues
 
-### Gejala
-```
-Error: UNIQUE constraint failed: users.email
-```
+### Query Lambat
 
-### Penyebab
-Mencoba insert data dengan nilai yang sudah ada.
-
-### Solusi
-
-```typescript
-// ✅ Handle dengan graceful error
-export const actions = {
-  register: async ({ request, locals }) => {
-    const form = await request.formData();
-    const email = form.get('email');
-    
-    try {
-      await locals.db.insertInto('users').values({ email }).execute();
-    } catch (error) {
-      if (error.message?.includes('UNIQUE constraint failed')) {
-        return fail(400, { error: 'Email sudah terdaftar' });
-      }
-      throw error;
-    }
-  }
-};
-```
-
-Atau check dulu sebelum insert:
-
-```typescript
-// ✅ Check existing
-const existing = await locals.db
-  .selectFrom('users')
-  .where('email', '=', email)
-  .selectAll()
-  .executeTakeFirst();
-
-if (existing) {
-  return fail(400, { error: 'Email sudah terdaftar' });
-}
-```
-
----
-
-## 🔴 Drizzle Studio Tidak Bisa Connect
-
-### Gejala
-```
-Error: Cannot connect to database
-Drizzle Studio connection failed
-```
-
-### Solusi
-
-#### 1. Pastikan `.env` Terisi
-
-```bash
-# .env
-CLOUDFLARE_ACCOUNT_ID=xxx
-CLOUDFLARE_DATABASE_ID=xxx
-CLOUDFLARE_API_TOKEN=xxx
-```
-
-#### 2. Cek `drizzle.config.ts`
-
-```typescript
-export default defineConfig({
-  schema: './src/lib/db/schema.ts',
-  out: './drizzle',
-  dialect: 'sqlite',
-  driver: 'd1-http',
-  dbCredentials: {
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
-    databaseId: process.env.CLOUDFLARE_DATABASE_ID,
-    token: process.env.CLOUDFLARE_API_TOKEN
-  }
-});
-```
-
-#### 3. Run dengan benar
-
-```bash
-# Load environment variables terlebih dahulu
-export $(cat .env | xargs)
-
-# Buka Drizzle Studio
-npm run db:studio
-```
-
----
-
-## 🔴 Migration Gagal
-
-### Gejala
-```
-Error: Migration failed
-Error: table users already exists
-```
-
-### Solusi
-
-#### 1. Check Migration Status
-
-```bash
-# Lihat applied migrations
-npx wrangler d1 migrations list DB --local
-```
-
-#### 2. Migration Conflict
-
-```bash
-# Force apply (hati-hati!)
-npx wrangler d1 migrations apply DB --local --force
-```
-
-#### 3. Reset Migrations (Development Only)
-
-```bash
-# Hapus semua migrations
-cd drizzle && rm *.sql
-
-# Generate ulang
-npm run db:generate
-
-# Apply
-npm run db:migrate:local
-```
-
----
-
-## 🔴 Data Tidak Persist
-
-### Gejala
-Data hilang setelah restart dev server.
-
-### Penyebab
-Mode development menggunakan in-memory database.
-
-### Solusi
-
-#### 1. Pastikan Menggunakan Local D1
-
-```bash
-# Check wrangler.toml
-# Harus ada:
-# [[d1_databases]]
-# binding = "DB"
-# database_id = "..."
-
-# Jalankan dengan --persist (jika perlu)
-npx wrangler dev --persist
-```
-
-#### 2. Data Tersimpan di `.wrangler/`
-
-```bash
-# Local database location
-.wrangler/state/d1/DB/
-```
-
----
-
-## 🔴 Query Lambat
-
-### Diagnosis
-
-```bash
-# Analyze query
-npx wrangler d1 execute DB --local --command "EXPLAIN QUERY PLAN SELECT * FROM users WHERE email = 'test@example.com'"
-```
-
-### Solusi
-
-#### 1. Tambahkan Index
-
+1. Add index:
 ```typescript
 // schema.ts
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  // ...
-}, (table) => ({
-  // Tambahkan index
-  emailIdx: index('email_idx').on(table.email),
-  nameIdx: index('name_idx').on(table.name)
-}));
+userId: text('user_id').references(() => users.id).notNull()
+  .$defaultFn(() => createIndex('posts_user_id_idx').on(table.userId))
 ```
 
-#### 2. Limit Results
-
+2. Limit results:
 ```typescript
-// ✅ Selalu pakai limit
-const users = await locals.db
-  .selectFrom('users')
-  .limit(20)
-  .offset(page * 20)
-  .selectAll()
-  .execute();
+.selectAll()
+.limit(100)  // Jangan select semua!
+.offset(page * 100)
 ```
 
-#### 3. Select Kolom yang Diperlukan Saja
-
+3. Select only needed columns:
 ```typescript
-// ✅ Select specific columns
-const users = await locals.db
-  .selectFrom('users')
-  .select(['id', 'name'])
-  .execute();
-
-// ❌ Hindari select all untuk data besar
-// const users = await locals.db.selectFrom('users').selectAll().execute();
+.select(['id', 'title', 'created_at'])  // ✅
+// .selectAll()  // ❌ Kalau tidak perlu
 ```
 
 ---
 
-## 🔧 Debug Commands
+## Checklist Debug Database
 
-### Check Database Status
-
-```bash
-# List tables
-npx wrangler d1 execute DB --local --command ".tables"
-
-# Check table structure
-npx wrangler d1 execute DB --local --command "PRAGMA table_info(users)"
-
-# Count records
-npx wrangler d1 execute DB --local --command "SELECT COUNT(*) FROM users"
-
-# Check indexes
-npx wrangler d1 execute DB --local --command "PRAGMA index_list(users)"
-```
-
-### Export/Import Data
-
-```bash
-# Export
-npx wrangler d1 export DB --local --output backup.sql
-
-# Import
-npx wrangler d1 execute DB --local --file backup.sql
-```
-
----
-
-## 🆘 Masih Error?
-
-### Checklist Debug
-
-- [ ] `wrangler.toml` sudah benar?
-- [ ] `database_id` sudah sesuai?
-- [ ] Sudah login ke Wrangler?
-- [ ] Migration sudah dijalankan?
-- [ ] `.env` terisi dengan benar?
-- [ ] Restart dev server setelah perubahan?
-
-### Resources
-
-- [Cloudflare D1 Docs](https://developers.cloudflare.com/d1/)
-- [Drizzle ORM Docs](https://orm.drizzle.team/docs)
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
+- [ ] `database_id` benar di `wrangler.toml`
+- [ ] Sudah `npm run db:migrate:local`
+- [ ] Schema dan index.ts sinkron
+- [ ] Snake_case di Kysely types
+- [ ] Drizzle Studio bisa connect

@@ -1,234 +1,265 @@
-# Database Setup - Cloudflare D1
+# Database Guide
 
-Panduan setup database Cloudflare D1 (SQLite).
+::: tip Update 🎉
+Database setup sekarang lebih sederhana! Tidak perlu `CLOUDFLARE_API_TOKEN` lagi - cukup `wrangler login` + `wrangler.toml`.
+:::
 
-## 📋 Overview
-
-Cloudflare D1 adalah database SQLite yang berjalan di edge network Cloudflare.
-
-**Keuntungan:**
-- 🌍 Global - Data direplikasi di 300+ lokasi
-- 🚀 Cepat - Query di edge terdekat dengan user
-- 💰 Murah - 500MB storage gratis
-- 📱 Edge-compatible - Works dengan Cloudflare Workers/Pages
-
-## 🚀 Setup Database
-
-### 1. Create Database
-
-```bash
-# Login ke Wrangler (jika belum login)
-npx wrangler login
-
-# Create database
-npx wrangler d1 create DB
-```
-
-Output contoh:
-```
-✅ Successfully created DB 'DB' in region APAC
-
-[[d1_databases]]
-binding = "DB"
-database_name = "DB"
-database_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-```
-
-### 2. Update wrangler.toml
-
-Copy output di atas ke `wrangler.toml`:
-
-```toml
-name = "my-app"
-compatibility_date = "2024-01-01"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "DB"
-database_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"  # Ganti dengan ID Anda
-```
-
-### 3. Apply Migrations
-
-```bash
-# Untuk local development
-npm run db:migrate:local
-
-# Untuk production
-npm run db:migrate
-```
-
-### 4. (Optional) Seed Data
-
-```bash
-# Seed database dengan data awal
-npm run db:seed:local
-```
-
-## 🗄️ Database Schema
-
-### Tables
-
-**users**
-```sql
-- id (TEXT PRIMARY KEY) - UUID
-- email (TEXT UNIQUE)
-- name (TEXT)
-- password_hash (TEXT, nullable)
-- provider ('email' | 'google')
-- google_id (TEXT, nullable)
-- avatar (TEXT, nullable)
-- email_verified (BOOLEAN)
-- created_at (TIMESTAMP)
-- updated_at (TIMESTAMP)
-```
-
-**sessions** (Lucia Auth)
-```sql
-- id (TEXT PRIMARY KEY)
-- user_id (TEXT FOREIGN KEY)
-- expires_at (TIMESTAMP)
-```
-
-**password_reset_tokens**
-```sql
-- id (TEXT PRIMARY KEY)
-- user_id (TEXT FOREIGN KEY)
-- token_hash (TEXT)
-- expires_at (TIMESTAMP)
-- used (BOOLEAN)
-```
-
-**email_verification_tokens**
-```sql
-- id (TEXT PRIMARY KEY)
-- user_id (TEXT FOREIGN KEY)
-- token_hash (TEXT)
-- expires_at (TIMESTAMP)
-- used (BOOLEAN)
-```
-
-**posts** (Example)
-```sql
-- id (INTEGER PRIMARY KEY AUTOINCREMENT)
-- title (TEXT)
-- content (TEXT)
-- published (BOOLEAN)
-- author_id (TEXT FOREIGN KEY)
-- created_at (TIMESTAMP)
-```
-
-## 🛠️ Database Commands
-
-```bash
-# Generate migration dari schema changes
-npm run db:generate
-
-# Apply migrations
-npm run db:migrate              # Production
-npm run db:migrate:local        # Local development
-
-# Open Drizzle Studio (GUI)
-npm run db:studio
-
-# Execute SQL
-npx wrangler d1 execute DB --local --command "SELECT * FROM users"
-```
-
-## 📊 Drizzle Studio
-
-GUI untuk manage database:
-
-```bash
-npm run db:studio
-```
-
-Buka http://local.drizzle.studio
-
-Fitur:
-- 📋 View all tables
-- 🔍 Query data
-- ➕ Insert/update/delete rows
-- 📈 Schema visualization
-
-## 🧪 Testing Database
-
-### Check Database Health
-
-```bash
-curl http://localhost:5173/api/health
-```
-
-Response:
-```json
-{
-  "status": "ok",
-  "db": "connected",
-  "timestamp": "2024-01-..."
-}
-```
-
-### Query via API
-
-```bash
-# List users
-curl http://localhost:5173/api/users
-
-# Create user
-curl -X POST http://localhost:5173/api/users \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@test.com","name":"Test"}'
-```
-
-## 🔧 Advanced
-
-### Manual SQL Execution
-
-```bash
-# Local
-npx wrangler d1 execute DB --local --file=./drizzle/custom.sql
-
-# Production
-npx wrangler d1 execute DB --remote --file=./drizzle/custom.sql
-```
-
-### Backup Database
-
-```bash
-# Export data
-npx wrangler d1 export DB --local --output=./backup.sql
-
-# Import data
-npx wrangler d1 execute DB --local --file=./backup.sql
-```
-
-### Delete Database
-
-```bash
-npx wrangler d1 delete DB
-```
-
-## 💰 Pricing
-
-| Usage | Free Tier | Paid |
-|-------|-----------|------|
-| Storage | 500 MB | $0.75/GB-month |
-| Read requests | 5 million/day | - |
-| Write requests | 100,000/day | - |
-
-## 🐛 Troubleshooting
-
-| Error | Solusi |
-|-------|--------|
-| "D1 binding not found" | Check `wrangler.toml` database_id |
-| "Database does not exist" | Pastikan database sudah dibuat |
-| "Migration failed" | Check SQL syntax di `drizzle/` folder |
-| "Permission denied" | Check API token punya permission D1:Edit |
+Database di LayangKit menggunakan **dual ORM strategy**:
+- **Drizzle ORM**: Schema definition & migrations
+- **Kysely**: Runtime queries (better D1 support)
 
 ---
 
-## 📖 Resources
+## Setup Database
 
-- [Cloudflare D1 Docs](https://developers.cloudflare.com/d1/)
-- [Drizzle ORM Docs](https://orm.drizzle.team/docs)
-- [SQLite Docs](https://www.sqlite.org/docs.html)
+### 1. Login ke Cloudflare
+
+```bash
+npx wrangler login
+```
+
+### 2. Create Database
+
+```bash
+npx wrangler d1 create my-database
+```
+
+### 3. Update wrangler.toml
+
+Copy `database_id` dari output:
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "my-database"
+database_id = "xxxxx-xxxx-xxxx-xxxx-xxxx"  # ← dari output
+```
+
+### 4. Apply Migrations
+
+```bash
+npm run db:migrate:local
+```
+
+::: warning Penting
+Tidak perlu mengisi `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_DATABASE_ID`, atau `CLOUDFLARE_API_TOKEN` di `.env`!
+:::
+
+---
+
+## Struktur File (⚠️ Penting!)
+
+Hanya **2 file** di `src/lib/db/`:
+
+```
+src/lib/db/
+├── schema.ts    # Drizzle schema (camelCase)
+└── index.ts     # All types + exports (snake_case)
+```
+
+### 1. schema.ts — Drizzle Schema
+
+```typescript
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  passwordHash: text('password_hash'),  // camelCase
+  createdAt: integer('created_at', { mode: 'number' })
+    .$defaultFn(() => Date.now()),
+});
+```
+
+### 2. index.ts — Kysely Types
+
+```typescript
+// Database interface (snake_case untuk Kysely)
+export interface Database {
+  users: {
+    id: string;
+    email: string;
+    name: string;
+    password_hash: string | null;  // snake_case!
+    created_at: number | null;
+  };
+}
+
+// Helper types
+export type User = Database['users'];
+export type NewUser = Omit<User, 'id' | 'created_at'>;
+
+// Schema export
+export * as schema from './schema';
+```
+
+---
+
+## Conversion Rules
+
+Saat update schema, konversi dari Drizzle ke Kysely:
+
+| Drizzle (schema.ts) | Kysely (index.ts) |
+|---------------------|-------------------|
+| `passwordHash` | `password_hash` |
+| `createdAt` | `created_at` |
+| `integer(..., { mode: 'boolean' })` | `number` (0/1) |
+| `.$defaultFn(...)` | `\| null` |
+| `.notNull()` | required type |
+
+---
+
+## Query Patterns
+
+### Select
+```typescript
+// +page.server.ts
+export const load = async ({ locals }) => {
+  const posts = await locals.db
+    .selectFrom('posts')
+    .select(['id', 'title', 'content'])
+    .where('user_id', '=', locals.user.id)
+    .orderBy('created_at', 'desc')
+    .execute();
+  
+  return { posts };
+};
+```
+
+### Insert
+```typescript
+const result = await locals.db
+  .insertInto('posts')
+  .values({
+    title: 'Hello World',
+    content: '...',
+    user_id: locals.user.id
+  })
+  .returning('id')
+  .executeTakeFirst();
+```
+
+### Update
+```typescript
+await locals.db
+  .updateTable('posts')
+  .set({ 
+    title: 'Updated',
+    updated_at: Date.now()
+  })
+  .where('id', '=', postId)
+  .execute();
+```
+
+### Delete
+```typescript
+await locals.db
+  .deleteFrom('posts')
+  .where('id', '=', postId)
+  .execute();
+```
+
+---
+
+## Adding New Table
+
+### Step 1: Update schema.ts
+```typescript
+export const posts = sqliteTable('posts', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  content: text('content'),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer('created_at', { mode: 'number' })
+    .$defaultFn(() => Date.now()),
+  updatedAt: integer('updated_at', { mode: 'number' })
+    .$defaultFn(() => Date.now()),
+});
+```
+
+### Step 2: Update index.ts
+```typescript
+export interface Database {
+  // ... existing tables
+  
+  posts: {
+    id: string;
+    title: string;
+    content: string | null;
+    user_id: string;
+    created_at: number | null;
+    updated_at: number | null;
+  };
+}
+
+// Export types
+export type Post = Database['posts'];
+export type NewPost = Omit<Post, 'id' | 'created_at' | 'updated_at'>;
+```
+
+### Step 3: Generate Migration
+```bash
+npm run db:generate
+```
+
+### Step 4: Apply Migration
+```bash
+npm run db:migrate:local
+```
+
+---
+
+## Database Commands
+
+```bash
+# Generate migration from schema changes
+npm run db:generate
+
+# Apply to local D1
+npm run db:migrate:local
+
+# Apply to production D1
+npm run db:migrate
+
+# Open Drizzle Studio GUI
+npm run db:studio
+
+# Reset local database
+npm run db:refresh:local
+```
+
+::: tip Drizzle Studio
+`npm run db:studio` membutuhkan Cloudflare API Token di `.env` (opsional). Alternatif: gunakan `wrangler d1 execute`.
+:::
+
+---
+
+## Best Practices
+
+1. **Always update BOTH files** — schema.ts dan index.ts harus sinkron
+2. **Use snake_case in Kysely** — Database interface menggunakan snake_case
+3. **Check types after changes** — Jalankan `npm run check` setelah update schema
+4. **Test migrations locally** — Selalu test di local sebelum production
+
+---
+
+## Troubleshooting
+
+### "D1 binding not found"
+- Pastikan `database_id` di `wrangler.toml` benar
+- Pastikan sudah `npx wrangler login`
+
+### "Table not found"
+- Pastikan migration sudah diapply: `npm run db:migrate:local`
+- Cek Drizzle Studio: `npm run db:studio`
+
+### Type errors after schema change
+- Update `index.ts` Database interface
+- Jalankan `npm run check`
+
+### "Column does not exist"
+- Cek spelling (snake_case vs camelCase)
+- Pastikan kolom ada di Kysely types

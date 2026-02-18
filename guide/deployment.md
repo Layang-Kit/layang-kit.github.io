@@ -71,13 +71,13 @@ RESEND_API_TOKEN=re_xxxxxxxx
 FROM_EMAIL=noreply@yourdomain.com
 ```
 
-**Untuk R2 (jika pakai file upload):**
+**Untuk File Upload (S3-compatible):**
 ```
-R2_ACCOUNT_ID=xxx
-R2_ACCESS_KEY_ID=xxx
-R2_SECRET_ACCESS_KEY=xxx
-R2_BUCKET_NAME=xxx
-R2_PUBLIC_URL=https://pub-xxxxx.r2.dev
+S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
+S3_BUCKET_NAME=my-bucket
+S3_ACCESS_KEY_ID=xxx
+S3_SECRET_ACCESS_KEY=xxx
+S3_PUBLIC_URL=https://cdn.example.com
 ```
 
 **Untuk Google OAuth:**
@@ -222,6 +222,10 @@ Common issues:
 1. Sudah set binding di Dashboard? (Settings → Bindings)
 2. Variable name benar? (harus `DB`)
 3. Sudah redeploy setelah set binding?
+
+::: tip Tidak perlu CLOUDFLARE_API_TOKEN
+Database binding menggunakan `wrangler.toml` bindings, bukan API token. Cukup set binding di Dashboard!
+:::
 
 ### Build System Version
 
