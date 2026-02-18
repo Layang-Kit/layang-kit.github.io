@@ -36,15 +36,7 @@ npm run dev
 ```
 
 Open browser Anda
-
-## Deploy
-
-```bash
-npm run deploy
-```
-
----
-
+  
 ## About LayangKit
 
 **LayangKit** adalah Edge-first full-stack starter template yang dibangun dengan:
