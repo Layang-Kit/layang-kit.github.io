@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "LayangKit"
   text: "AI-Native Starter"
-  tagline: SvelteKit + Cloudflare + AI Agents. From idea to production in hours.
+  tagline: Full-stack starter with FREE hosting, FREE database, FREE domain. From idea to production in hours.
   actions:
     - theme: brand
       text: Quick Start
@@ -20,8 +20,8 @@ features:
     details: From idea to production in 1 day. Not 1 month.
   - title: Production Ready
     details: Auth, database, file upload built-in. Deploy to 300+ edge locations.
-  - title: 100% Free
-    details: Generous free tiers. Perfect for MVPs and side projects.
+  - title: 100% Free Forever
+    details: Cloudflare hosting ($0), D1 database ($0), R2 storage ($0), .pages.dev domain ($0).
 ---
 
 ## Install
@@ -36,7 +36,19 @@ The installer will guide you through setup.
 
 ## What is LayangKit?
 
-LayangKit is a full-stack starter template with 5 AI Agents:
+LayangKit is a **full-stack starter template** designed for developers who love free stuff:
+
+| Resource | Cost | Provider |
+|----------|------|----------|
+| **Hosting** | $0/month | Cloudflare Pages |
+| **Database** | $0/month | Cloudflare D1 (5GB) |
+| **File Storage** | $0/month | Cloudflare R2 (10GB) |
+| **Domain** | $0/month | .pages.dev included |
+| **Email** | $0/month | Resend (3,000/month) |
+
+**Start with $0. Scale when needed.**
+
+### 5 AI Agents Workflow:
 
 ```
 Your Idea
