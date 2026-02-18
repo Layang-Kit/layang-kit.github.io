@@ -1,12 +1,12 @@
 # AI Agent Workflow
 
-Development dengan AI Agents — dari ide sampai deploy, otomatis.
+Build applications with AI Agents — from idea to deployment, automated.
 
 ---
 
-## Apa itu AI Agent Workflow?
+## What is AI Agent Workflow?
 
-Workflow terdiri dari **5 AI Agents** yang bekerja berurutan untuk mengubah ide Anda menjadi aplikasi live:
+A workflow of **5 AI Agents** that work sequentially to turn your idea into a live application:
 
 ```
 Product Agent → Tech Lead Agent → Developer Agent → QA Agent → DevOps Agent
@@ -14,65 +14,108 @@ Product Agent → Tech Lead Agent → Developer Agent → QA Agent → DevOps Ag
    Define         Design            Implement       Test        Deploy
 ```
 
-Setiap agent **WAJIB** menunggu approve dari Anda sebelum lanjut ke agent berikutnya.
+Each agent **MUST** wait for your approval before proceeding to the next.
 
 ---
 
-## 5 Agents
+## The 5 Agents
 
-| Agent | Tugas | Output |
-|-------|-------|--------|
-| **Product Agent** | Definisi kebutuhan | PRD, User Stories |
-| **Tech Lead Agent** | Desain teknis | Tech Spec, Architecture |
-| **Developer Agent** | Implementasi kode | Working code di `src/` |
+| Agent | Task | Output |
+|-------|------|--------|
+| **Product Agent** | Define requirements | PRD, User Stories |
+| **Tech Lead Agent** | Technical design | Tech Spec, Architecture |
+| **Developer Agent** | Code implementation | Working code in `src/` |
 | **QA Agent** | Testing | Test report |
-| **DevOps Agent** | Deployment | Live app di Cloudflare |
+| **DevOps Agent** | Deployment | Live app on Cloudflare |
 
 ---
 
-## Kenapa Menggunakan AI Agents?
+## Why Use AI Agents?
 
-| Masalah Tradisional | Solusi AI Agents |
-|---------------------|------------------|
-| ❌ Scope creep | ✅ PRD jelas sejak awal |
-| ❌ Technical debt | ✅ Architecture document |
-| ❌ Bug setelah deploy | ✅ QA testing otomatis |
-| ❌ Manual deployment | ✅ Deploy otomatis |
-| ❌ Dokumentasi terpisah | ✅ Semua tersimpan di `workflow/outputs/` |
+| Traditional Problem | AI Agent Solution |
+|---------------------|-------------------|
+| ❌ Scope creep | ✅ Clear PRD from the start |
+| ❌ Technical debt | ✅ Architecture documented |
+| ❌ Bugs after deploy | ✅ Automated QA testing |
+| ❌ Manual deployment | ✅ Automated deploy |
+| ❌ Scattered documentation | ✅ All stored in `workflow/outputs/` |
 
 ---
 
-## Cara Kerja (Simplified)
+## How It Works
 
 ```
-Anda (ide) → PA (PRD) → [APPROVE] → TLA (Spec) → [APPROVE] 
+You (idea) → PA (PRD) → [APPROVE] → TLA (Spec) → [APPROVE] 
 → DevA (Code) → [APPROVE] → QAA (Test) → [APPROVE] → DOA (Deploy)
 ```
 
 ### Flow Control
-- **Approve** → Lanjut ke agent berikutnya
-- **Revisi** → Agent memperbaiki output
-- **Skip** → Bisa loncat ke agent tertentu (jika sudah punya PRD, langsung ke TLA)
+- **Approve** → Continue to next agent
+- **Revise** → Agent fixes output
+- **Skip** → Jump to specific agent (e.g., skip to TLA if you already have PRD)
 
 ---
 
-## Contoh Kasus: Todo App
+## Example: Todo App
 
-**Timeline: 3 hari dari ide → live**
+**Timeline: 3 days from idea → live**
 
-| Hari | Agent | Aktivitas |
-|------|-------|-----------|
-| Day 1 | Product Agent | Define fitur: create, read, update, delete todo |
+| Day | Agent | Activity |
+|-----|-------|----------|
+| Day 1 | Product Agent | Define features: create, read, update, delete todo |
 | Day 1 | Tech Lead Agent | Design database schema, routes, components |
-| Day 2 | Developer Agent | Implement semua fitur |
+| Day 2 | Developer Agent | Implement all features |
 | Day 3 | QA Agent | Test functionality, edge cases |
-| Day 3 | DevOps Agent | Deploy ke Cloudflare Pages |
+| Day 3 | DevOps Agent | Deploy to Cloudflare Pages |
 
 ---
 
-## Memulai
+## Philosophy: AI-Native by Design
 
-Lihat detail cara penggunaan di [Workflow Setup](./workflow-setup).
+Most tools add AI as an afterthought. LayangKit was built **for** AI from day one:
+
+### Structured Prompts
+
+Each agent has a dedicated prompt file in `workflow/agents/`:
+
+```
+workflow/agents/
+├── product.md      # How to gather requirements
+├── tech-lead.md    # How to design architecture
+├── developer.md    # How to write code
+├── qa.md           # How to test
+└── devops.md       # How to deploy
+```
+
+### AI-Friendly Code Patterns
+
+Code is written explicitly so AI understands it easily:
+
+```typescript
+// Kysely queries — explicit, no magic
+const items = await locals.db
+  .selectFrom('items')
+  .selectAll()
+  .where('user_id', '=', userId)
+  .execute();
+```
+
+### Unified Structure
+
+Every feature follows the same pattern. AI knows exactly where to find and write code:
+
+```
+src/routes/(dashboard)/[feature]/
+├── +page.svelte
+├── +page.server.ts
+└── +server.ts
+```
+
+---
+
+## Get Started
+
+See detailed usage in [Workflow Setup](./workflow-setup).
 
 ---
 
@@ -80,13 +123,13 @@ Lihat detail cara penggunaan di [Workflow Setup](./workflow-setup).
 
 ```bash
 # Full workflow
-@workflow/agents/product.md [deskripsi aplikasi]
+@workflow/agents/product.md [app description]
 
-# Skip ke implementasi (jika sudah ada spec)
-@workflow/agents/developer.md [instruksi]
+# Skip to implementation (if you have spec)
+@workflow/agents/developer.md [instructions]
 
 # Fix bug
-@workflow/agents/developer.md Fix bug: [deskripsi]
+@workflow/agents/developer.md Fix bug: [description]
 @workflow/agents/qa.md Verify fix
 @workflow/agents/devops.md Deploy hotfix
 ```
