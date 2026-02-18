@@ -1,365 +1,265 @@
 # 🚀 Deployment Guide
 
-Deploy aplikasi SvelteKit ke Cloudflare Pages via GitHub dalam 10 menit.
+Deploy aplikasi SvelteKit ke Cloudflare Pages.
 
 ---
 
-## 🎯 Overview
+## 🎯 Pilih Cara Deploy
 
-Cloudflare Pages dengan Git Integration adalah cara termudah untuk deploy:
-- ✅ **Auto-deploy** - Push ke GitHub = auto deploy
-- ✅ **Gratis** - Unlimited requests, 500 builds/month
-- ✅ **Global CDN** - 300+ lokasi edge
-- ✅ **Edge Functions** - SvelteKit SSR berjalan di edge
-- ✅ **D1 Integration** - Database via Dashboard
+| Cara | Waktu | Auto-setup | Buka Dashboard? |
+|------|-------|------------|-----------------|
+| **Otomasi CLI** ⭐ | 2 menit | ✅ Otomatis | ❌ Tidak perlu |
+| **Manual Dashboard** | 10 menit | ❌ Manual | ✅ Perlu |
+
+**Rekomendasi:** Gunakan **Otomasi CLI** untuk deployment lebih cepat tanpa buka dashboard!
 
 ---
 
-## 📋 Pre-Deployment Checklist
+## Cara 1: Otomasi CLI (2 Menit) ⭐
 
-Sebelum deploy, pastikan:
+Deploy + konfigurasi sepenuhnya via CLI tanpa buka dashboard Cloudflare.
 
-```markdown
-- [ ] Project sudah di-push ke GitHub
-- [ ] npm run build berhasil locally
-- [ ] Database D1 sudah dibuat di Cloudflare
-- [ ] Environment variables sudah disiapkan
-- [ ] `wrangler.toml` ada (untuk local dev)
+### Prerequisites
+
+```bash
+# Login ke Cloudflare (satu kali setup)
+npx wrangler login
+
+# Pastikan build berhasil
+npm run build
 ```
 
+### Step-by-Step Deployment
+
+#### 1. Deploy Aplikasi
+
+```bash
+npm run deploy
+```
+
+Output contoh:
+```
+✨ Successfully deployed to https://my-app.pages.dev
+```
+
+#### 2. Configure D1 Binding (WAJIB)
+
+```bash
+npx wrangler pages bindings add d1 \
+  --project-name=my-app \
+  --binding=DB \
+  --database=my-database
+```
+
+#### 3. Set Environment Variables
+
+Tidak perlu buka dashboard! Via CLI:
+
+```bash
+# Email service (Resend)
+npx wrangler pages secret put RESEND_API_TOKEN --project-name=my-app
+# Enter value: re_your_token_here
+
+npx wrangler pages secret put FROM_EMAIL --project-name=my-app
+# Enter value: noreply@yourdomain.com
+
+# S3 Storage (jika pakai file upload)
+npx wrangler pages secret put S3_ENDPOINT --project-name=my-app
+npx wrangler pages secret put S3_ACCESS_KEY_ID --project-name=my-app
+npx wrangler pages secret put S3_SECRET_ACCESS_KEY --project-name=my-app
+npx wrangler pages secret put S3_BUCKET_NAME --project-name=my-app
+
+# Google OAuth (opsional)
+npx wrangler pages secret put GOOGLE_CLIENT_ID --project-name=my-app
+npx wrangler pages secret put GOOGLE_CLIENT_SECRET --project-name=my-app
+```
+
+#### 4. Apply Database Migrations
+
+```bash
+npm run db:migrate
+```
+
+#### 5. Verify Deployment
+
+```bash
+curl https://my-app.pages.dev/api/health
+```
+
+Expected response:
+```json
+{"status":"ok","db":"connected","timestamp":"2024-..."}
+```
+
+🎉 **Selesai!** Aplikasi live tanpa buka dashboard Cloudflare!
+
 ---
 
-## 🚀 Deployment Steps (Git Integration)
+## Cara 2: Manual Dashboard
 
-### Step 1: Buat Project di Dashboard (2 menit)
+Jika otomasi CLI bermasalah, gunakan cara manual via Dashboard.
 
-1. Buka [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. Workers & Pages → **Create application**
-3. Pilih **Pages** → **Connect to Git**
-4. Connect GitHub account → Pilih repository kamu
-5. Configure build:
-   - **Project name:** `my-app` (bebas)
+### Step 1: Connect GitHub
+
+1. [Dashboard](https://dash.cloudflare.com) → Workers & Pages → **Create**
+2. **Pages** → **Connect to Git**
+3. Pilih repository → Configure:
+   - **Project name:** `my-app`
    - **Production branch:** `main`
-   - **Framework preset:** `SvelteKit`
+   - **Framework:** `SvelteKit`
    - **Build command:** `npm run build`
-   - **Build output directory:** `.svelte-kit/cloudflare`
+   - **Output:** `.svelte-kit/cloudflare`
+4. **Save and Deploy**
 
-6. Click **Save and Deploy**
+### Step 2: Set D1 Binding
 
-### Step 2: Set D1 Database Binding (WAJIB)
+1. Project → **Settings** → **Bindings**
+2. Add **D1 database binding**:
+   - Variable name: `DB`
+   - Database: pilih database
+3. **Save**
 
-Setelah project terbuat:
-
-1. Pilih project kamu → **Settings** → **Bindings**
-2. Click **Add** → **D1 database bindings**
-3. **Variable name:** `DB`
-4. **D1 database:** Pilih database yang sudah dibuat
-5. Click **Save**
-
-::: warning ⚠️ Penting
-Tanpa setting ini, aplikasi akan error 500 karena tidak bisa connect ke database!
-:::
+> ⚠️ **WAJIB:** Tanpa ini aplikasi error 500!
 
 ### Step 3: Set Environment Variables
 
 1. Settings → **Environment variables**
-2. Add variables (Production environment):
-
-**Required:**
-```
-RESEND_API_TOKEN=re_xxxxxxxx
-FROM_EMAIL=noreply@yourdomain.com
-```
-
-**Untuk File Upload (S3-compatible):**
-```
-S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
-S3_BUCKET_NAME=my-bucket
-S3_ACCESS_KEY_ID=xxx
-S3_SECRET_ACCESS_KEY=xxx
-S3_PUBLIC_URL=https://cdn.example.com
-```
-
-**Untuk Google OAuth:**
-```
-GOOGLE_CLIENT_ID=xxx
-GOOGLE_CLIENT_SECRET=xxx
-```
+2. Add variables (sama dengan CLI method)
 
 ### Step 4: Redeploy
 
-1. **Deployments** tab
-2. Pilih deployment terbaru → **Retry deployment**
-
-Atau push commit baru ke GitHub:
 ```bash
-git commit --allow-empty -m "trigger redeploy"
+git commit --allow-empty -m "trigger deploy"
 git push
 ```
 
-🎉 **Selesai!** Aplikasi sudah online di `https://my-app.pages.dev`
+---
+
+## 🔄 Update Deployment
+
+### Via CLI (Cepat)
+
+```bash
+npm run build && npm run deploy
+```
+
+### Via Git (Auto-deploy)
+
+```bash
+git add . && git commit -m "update" && git push
+```
 
 ---
 
-## 🗄️ Production Database Migration
+## 🗄️ Production Database
 
-### Apply Migration ke Production
+### Apply Migration
 
 ```bash
-# Apply migration ke D1 production
 npm run db:migrate
 ```
 
-**Atau via Wrangler:**
-```bash
-npx wrangler d1 migrations apply DB --remote
-```
-
-### Verify Production DB
+### Verify Database
 
 ```bash
-# Check tables di production
-npx wrangler d1 execute DB --remote --command ".tables"
+npx wrangler d1 execute DB --remote --command "SELECT * FROM users"
 ```
 
 ---
 
 ## 🌐 Custom Domain
 
-### Setup Custom Domain
-
 1. Dashboard → Pages → Project → **Custom domains**
-2. Click **Set up a custom domain**
-3. Enter domain: `yourdomain.com`
-4. Follow DNS setup instructions
-
-### DNS Configuration
-
-Tambahkan DNS records di domain provider:
-
-```
-Type: CNAME
-Name: www
-Target: my-app.pages.dev
-```
-
-Atau untuk apex domain:
-
-```
-Type: A
-Name: @
-Target: 192.0.2.1  (Cloudflare akan provide)
-```
+2. **Set up** → Enter domain
+3. Follow DNS instructions
 
 ---
 
-## 📋 Production Checklist
+## 🛠️ Troubleshooting
 
-```markdown
-## Pre-Launch Checklist
+### "D1 binding not found"
 
-### Security
-- [ ] Environment variables di-set di Cloudflare Dashboard
-- [ ] Tidak ada secret di codebase
-- [ ] HTTPS enabled (otomatis di Cloudflare)
-
-### Database
-- [ ] D1 binding di-set di Dashboard (Settings → Bindings)
-- [ ] Migration applied ke production
-- [ ] Seed data (jika perlu)
-
-### Features
-- [ ] Register/Login working
-- [ ] OAuth callback URL updated (production)
-- [ ] Email sending working (if used)
-- [ ] File upload working (if used)
-
-### Monitoring
-- [ ] Analytics enabled
-- [ ] Error tracking setup (optional)
+**Via CLI (Cepat):**
+```bash
+npx wrangler pages bindings add d1 \
+  --project-name=my-app \
+  --binding=DB \
+  --database=my-database
 ```
 
----
+**Via Dashboard:**
+Settings → Bindings → Add D1
 
-## 🔧 Troubleshooting Deployment
-
-### Error 500 Setelah Deploy
-
-**Penyebab #1: D1 Binding Belum Di-set**
-
-```
-Solution:
-1. Dashboard → Project → Settings → Bindings
-2. Add D1 database binding → Variable name: DB
-3. Save → Redeploy
-```
-
-**Penyebab #2: Environment Variables Belum Di-set**
-
-```
-Solution:
-1. Settings → Environment variables
-2. Add semua required variables
-3. Redeploy
-```
-
-**Penyebab #3: Build Failed**
+### "Missing environment variable"
 
 ```bash
-# Check build locally
-cd guide/my-app
-npm run build
+npx wrangler pages secret put <VARIABLE_NAME> --project-name=my-app
 ```
 
-Common issues:
-- TypeScript errors → Run `npm run check`
-- Missing imports → Check case sensitivity
-- Node version mismatch → Set di Dashboard: Settings → Build & deployments → Build system version
+### Error 500
 
-### Error: "D1 binding not found"
-
-**Cek:**
-1. Sudah set binding di Dashboard? (Settings → Bindings)
-2. Variable name benar? (harus `DB`)
-3. Sudah redeploy setelah set binding?
-
-::: tip Tidak perlu CLOUDFLARE_API_TOKEN
-Database binding menggunakan `wrangler.toml` bindings, bukan API token. Cukup set binding di Dashboard!
-:::
-
-### Build System Version
-
-Jika build failed, cek build system version:
-
-1. Dashboard → Project → Settings → Build & deployments
-2. Build system version: **Version 2 (Beta)**
-3. Build command: `npm run build`
-4. Build output directory: `.svelte-kit/cloudflare`
+- Check D1 binding: `npx wrangler pages bindings list --project-name=my-app`
+- Check environment variables
+- Check logs: `npm run logs`
 
 ---
 
-## 🔄 Continuous Deployment
-
-Dengan Git Integration, setiap push ke branch `main` akan otomatis deploy ke production.
-
-### Preview Deployments
-
-Push ke branch lain akan membuat preview deployment:
-```bash
-git checkout -b feature/new-page
-git push origin feature/new-page
-```
-
-Preview URL: `https://feature-new-page.my-app.pages.dev`
-
-### Deploy Hooks (Optional)
-
-Untuk trigger deploy dari external:
-
-1. Pages → Project → Settings → Build & deployments
-2. Deploy hooks → Create deploy hook
-3. Gunakan URL untuk trigger deploy:
+## 📋 Commands Reference
 
 ```bash
-curl -X POST https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/xxxxx
+# Deploy aplikasi
+npm run deploy
+
+# Set secret/environment variable
+npx wrangler pages secret put <NAME> --project-name=my-app
+
+# List semua secrets
+npx wrangler pages secret list --project-name=my-app
+
+# Delete secret
+npx wrangler pages secret delete <NAME> --project-name=my-app
+
+# View logs
+npm run logs
+
+# Database migrate
+npm run db:migrate
+
+# Execute SQL
+npx wrangler d1 execute DB --remote --command "SELECT * FROM users"
+
+# List projects
+npx wrangler pages project list
 ```
-
----
-
-## 📝 wrangler.toml (Local Development)
-
-File `wrangler.toml` diperlukan untuk **local development** saja. Untuk production, semua binding diatur via Dashboard.
-
-```toml
-# wrangler.toml - Untuk local development
-[[d1_databases]]
-binding = "DB"
-database_name = "my-app-db"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-```
-
-::: info ℹ️ Info
-Untuk Git Integration deployment, `wrangler.toml` **tidak** digunakan untuk production binding. Semua binding harus di-set via Dashboard.
-:::
 
 ---
 
 ## 📊 Monitoring
 
-### Cloudflare Analytics
+### View Logs
 
-Dashboard → Pages → Project → Analytics
+```bash
+# Real-time logs
+npm run logs
 
-Metrics yang tersedia:
-- Total requests
-- Bandwidth usage
-- Build duration
-- Error rate
-
-### Custom Analytics (Optional)
-
-Tambahkan tracking script:
-
-```svelte
-<!-- src/routes/+layout.svelte -->
-<svelte:head>
-  <!-- Google Analytics, Plausible, dll -->
-</svelte:head>
+# Atau
+npx wrangler pages deployment tail --project-name=my-app --format=pretty
 ```
 
----
+### Health Check
 
-## 🎯 Production Best Practices
-
-### 1. Environment Variables
-- Jangan commit `.env`
-- Gunakan Cloudflare Dashboard untuk production secrets
-- Different values untuk dev vs production
-
-### 2. Database
-- Always backup sebelum migration besar
-- Test migration di local dulu
-- Gunakan transactions untuk data integrity
-
-### 3. Performance
-- Enable Cloudflare caching
-- Optimize images (WebP, responsive)
-- Minimize JavaScript bundle
-
-### 4. Security
-- HTTPS only (otomatis di Cloudflare)
-- Security headers di `hooks.server.ts`:
-
-```typescript
-// src/hooks.server.ts
-export const handle = async ({ event, resolve }) => {
-  const response = await resolve(event);
-  
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  return response;
-};
+```bash
+curl https://my-app.pages.dev/api/health
 ```
 
 ---
 
 ## 🎉 Deployment Complete!
 
-Aplikasi kamu sekarang:
-- ✅ Live di internet
-- ✅ Auto-deploy dari GitHub
-- ✅ Dihost di 300+ edge locations
-- ✅ Dapat HTTPS otomatis
-- ✅ Scalable tanpa batas
+Aplikasi sudah live di 300+ edge locations! 🚀
 
-### What's Next?
-
-- [Custom Domain](./deployment#custom-domain) - Gunakan domain sendiri
-- [Monitoring](./deployment#monitoring) - Track performance
-- [AI-First Development](./ai-first-development) - Build fitur baru dengan AI
-
----
-
-**Selamat! 🚀** Aplikasi sudah live!
+| Command | Fungsi |
+|---------|--------|
+| `npm run deploy` | Deploy aplikasi |
+| `npm run logs` | View logs |
+| `npm run db:migrate` | Apply migrations |
