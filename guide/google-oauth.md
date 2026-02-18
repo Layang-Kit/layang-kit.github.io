@@ -67,7 +67,7 @@ Tambahkan redirect URIs berikut:
 
 **Untuk Local Development:**
 ```
-http://localhost:5173/auth/google/callback
+`http://localhost:5173/auth/google/callback`
 ```
 
 **Untuk Production:**
@@ -123,7 +123,7 @@ Atau set via Cloudflare Dashboard:
 npm run dev
 ```
 
-1. Buka http://localhost:5173/login
+1. Buka `/login` page
 2. Klik **"Continue with Google"**
 3. Pilih akun Google Anda
 4. Jika berhasil, akan redirect ke dashboard

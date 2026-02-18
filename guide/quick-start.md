@@ -35,7 +35,7 @@ npm run db:migrate:local
 npm run dev
 ```
 
-Open http://localhost:5173
+Open browser Anda
 
 ## Deploy
 

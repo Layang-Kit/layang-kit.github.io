@@ -129,4 +129,4 @@ src/
 
 - [Setup Google OAuth](./google-oauth)
 - [Setup Email Verification](./resend-email)
-- [Profile Management](./profile-management)
+- [File Uploads](./file-uploads)

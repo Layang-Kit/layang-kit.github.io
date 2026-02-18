@@ -220,5 +220,5 @@ src/
 ## 📖 Lanjutan
 
 - [Setup S3 Storage](./cloudflare-r2) - Konfigurasi R2, Wasabi, S3, dll
-- [Profile Management](./profile-management)
+- [Authentication](./authentication)
 - [Troubleshooting Upload](../troubleshooting/upload)

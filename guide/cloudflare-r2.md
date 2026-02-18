@@ -148,7 +148,7 @@ docker run -p 9000:9000 -p 9001:9001 \
 
 ### 2. Create Bucket
 
-1. Buka http://localhost:9001
+1. Buka MinIO Console (biasanya `http://localhost:9001`)
 2. Login dengan credentials
 3. Create bucket
 

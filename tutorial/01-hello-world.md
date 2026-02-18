@@ -64,7 +64,7 @@ npm run db:migrate:local
 npm run dev
 ```
 
-Buka http://localhost:5173
+Buka aplikasi di browser
 
 Coba ketik nama di input — reaktivitas Svelte 5 langsung terasa!
 

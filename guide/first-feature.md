@@ -505,12 +505,12 @@ Edit `src/routes/+layout.svelte` dan tambahkan link ke Todos:
    ```
 
 2. **Register/Login**:
-   - Buka http://localhost:5173
+   - Buka aplikasi di browser
    - Register akun baru atau login
 
 3. **Navigate ke Todos**:
    - Klik "Todos" di navbar
-   - Atau langsung ke http://localhost:5173/todos
+   - Atau langsung ke `/todos`
 
 4. **Test semua fitur**:
    - ✅ Add todo baru
