@@ -11,7 +11,7 @@ export default defineConfig({
     
     nav: [
       { text: 'Guide', link: '/guide/quick-start' },
-      { text: 'Features', link: '/guide/creating-features' },
+      { text: 'AI Agents', link: '/guide/ai-first-development' },
       { text: 'GitHub', link: 'https://github.com/Layang-Kit/layang-app' }
     ],
 
